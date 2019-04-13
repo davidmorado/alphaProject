@@ -7,9 +7,13 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 #defining functions
+A=X;B=Y
 def sq_distance(A, B):
 
-  row_norms_A = tf.reduce_sum(tf.square(A), axis=1)
+  row_norms_A = tf.reduce_sum(tf.square(A), axis=1) #İstenilen aksis göre toplama yapmak için 
+  # Axis 1 vektörleri toplamak için 
+#https://www.tensorflow.org/api_docs/python/tf/math/reduce_sum  
+  
   row_norms_A = tf.reshape(row_norms_A, [-1, 1])  # Column vector.
 
   row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
@@ -24,9 +28,9 @@ def kernel (A,B, tau=0.1):
 n_input = 1
 n_output = 1
 
-X = tf.placeholder(tf.float32, shape = (None,  n_input))
-Y= tf.placeholder(tf.float32, shape = (None, n_output))
-tau = tf.placeholder(tf.float32, shape = ())
+X = tf.placeholder(tf.float32, shape = (None,  n_input));X
+Y= tf.placeholder(tf.float32, shape = (None, n_output));Y
+tau = tf.placeholder(tf.float32, shape = ())  ;tau
 W = tf.Variable(tf.truncated_normal([n_input, n_output], stddev=0.1))
 b = tf.Variable(tf.constant(0.1, shape=[n_output]))
 
