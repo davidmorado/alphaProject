@@ -1,14 +1,39 @@
 
 
 
+
+
+1) create yaml file from environment:
+# documentation: 
+https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
+'''
+conda activate myenv
+conda env export > environment.yml
+'''
+
+
+2) create conda environment from yaml file:
+# documentation: 
+https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
+'''
+conda env create -f environment.yml
+'''
+
+veryfiy that environment was created:
+'''
+conda list
+'''
+
+
+
+
+
+
+
 useful links:
 NEC implementation in tensorflow:
     https://github.com/imai-laboratory/nec
     
     
-Reinforcement learning course slides and youtube link (by David Silver, Deepmind):   
-    http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html
-    
-Other reinforcement learning course:
-    http://rail.eecs.berkeley.edu/deeprlcourse/
-    http://rail.eecs.berkeley.edu/deeprlcourse/static/slides/lec-8.pdf
+
+	
