@@ -59,7 +59,7 @@ sess.run(init)
 
 x_test = np.array([0.1])
 
-n_iterations = 1000
+n_iterations = 100
 
 for i in range(n_iterations):
 
@@ -72,7 +72,7 @@ y_true = np.sin(x_test * 1.5 * np.pi )
 print("y pred:", y_pred_)
 print("y true:", y_true)
                    
-def pred_wlr(X_train, X_to_pred, optimizer, y_pred, n_iterations=1000, t=0.001):
+def pred_wlr(X_train, X_to_pred, optimizer, y_pred, n_iterations=100, t=0.001):
     
     y_pred_list = []
     
@@ -97,13 +97,26 @@ t_list = [0.0001, 0.001, 0.005, 0.05, 0.5, 1, 2]
 
 for t_ in t_list:
       
-    y_pred_ = pred_wlr(x,x, optimizer, y_pred, t=t_)
+    y_pred_ = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_)
     y_true = np.sin(x * 1.5 * np.pi ) 
     r = rmse(y_pred_, y_true)
-
     rmse_list.append(r)
-    
-plt.plot(y_pred_, c="r")
-plt.plot(y_true, c="b")
+
+plt.plot(rmse_list)
 plt.grid()
-plt.legend(["Prediction", "Ground Truth"])
+  
+t_over = t_list[0]
+t_perf = t_list[3]
+t_under = t_list[6]
+
+y_pred_over = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_over)
+y_pred_perf = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_perf)
+y_pred_under = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_under)
+
+    
+plt.plot(y_pred_over, c="r")
+plt.plot(y_pred_perf, c="b")
+plt.plot(y_pred_under, c="y")
+plt.plot(y_true, c="g")
+plt.grid()
+plt.legend(["Prediction with overfitting",  "Prediction just right", "Prediction with underfitting",  "Ground Truth"])

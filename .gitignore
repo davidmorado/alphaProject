@@ -1,8 +1,10 @@
 ### General ###
+.DS_Store
 *.log
 *.pyc
 storage
 data
+
 
 
 ### Environments ###
