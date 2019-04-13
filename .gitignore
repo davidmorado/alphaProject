@@ -1,0 +1,20 @@
+<<<<<<< HEAD
+=======
+### General ###
+.DS_Store
+*.log
+*.pyc
+storage
+data
+
+
+
+### Environments ###
+.env
+.venv
+.vscode
+
+### Python ###
+__pycache__/
+
+>>>>>>> f8649a64274b57b7bca3029a04c75757fbe7c0e1
