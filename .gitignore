@@ -1,0 +1,15 @@
+### General ###
+*.log
+*.pyc
+storage
+data
+
+
+### Environments ###
+.env
+.venv
+.vscode
+
+### Python ###
+__pycache__/
+
