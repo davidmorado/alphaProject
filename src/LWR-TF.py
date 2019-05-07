@@ -47,10 +47,10 @@ learning_rate = 0.0005
 optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost) 
   
 #Initializing noisy non linear data
-x = np.linspace(0,1,100).astype(float)
+x = np.linspace(0,1,100).astype(float) # shape = (100, 1)
 noise = np.random.normal(loc = 0, scale = .25, size = 100)
 y = np.sin(x * 1.5 * np.pi ) 
-y_noise = y + noise
+y_noise = y + noise # shape = (100,)
 
 #running the graph
 init = tf.global_variables_initializer()

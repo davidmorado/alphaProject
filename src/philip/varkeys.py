@@ -209,6 +209,8 @@ history = model.fit_generator(
 
 print(history.history.keys())
 
+
+
 # summarize history for accuracy
 plt.plot(history.history['accuracy'])#
 plt.plot(history.history['val_accuracy'])
