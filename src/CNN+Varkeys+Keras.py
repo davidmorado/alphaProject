@@ -156,7 +156,7 @@ def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
     return model
 
 
-def fit_evaluate( model, x_train, y_train,  y_test, x_test, batch_size, epochs, lr):
+def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr):
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                 # optimizer=keras.optimizers.SGD(lr=0.1),
