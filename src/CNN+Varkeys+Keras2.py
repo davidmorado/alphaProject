@@ -77,7 +77,7 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 n_output = 10
 embedding_dim = 20
-n_keys_per_class = 100
+n_keys_per_class = 1
 values = np.vstack((np.repeat([[1,0,0,0,0,0,0,0,0,0]], n_keys_per_class, axis=0),
                     np.repeat([[0,1,0,0,0,0,0,0,0,0]], n_keys_per_class, axis=0),
                     np.repeat([[0,0,1,0,0,0,0,0,0,0]], n_keys_per_class, axis=0),
@@ -177,20 +177,12 @@ batch_size = 64
 lr = 0.0001
 epochs = 30
 
-perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
-for p in perc_data:
 
-    print("Pecentage of training =", p)
-    #x_train = np
-    idx = np.random.choice(num_samples, int(p*num_samples))
-    x_train_ = x_train[idx, ]
-    y_train_ = y_train[idx,]
-
-    print("CNN+Keys...")
-    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
-    fit_evaluate( model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+print("CNN+Keys...")
+model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
+fit_evaluate( model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
 
 
-    print("CNN...")
-    model2 = CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10)
-    fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+print("CNN...")
+model2 = CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10)
+fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
