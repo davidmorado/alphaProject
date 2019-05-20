@@ -77,17 +77,17 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 n_output = 10
 embedding_dim = 20
-keys_size=1
-values = np.vstack((np.repeat([[1,0,0,0,0,0,0,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,1,0,0,0,0,0,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,1,0,0,0,0,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,1,0,0,0,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,0,1,0,0,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,0,0,1,0,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,0,0,0,1,0,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,0,0,0,0,1,0,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,0,0,0,0,0,1,0]], keys_size, axis=0),
-                    np.repeat([[0,0,0,0,0,0,0,0,0,1]], keys_size, axis=0)))
+n_keys_per_class = 100
+values = np.vstack((np.repeat([[1,0,0,0,0,0,0,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,1,0,0,0,0,0,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,1,0,0,0,0,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,1,0,0,0,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,0,1,0,0,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,0,0,1,0,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,0,0,0,1,0,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,0,0,0,0,1,0,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,0,0,0,0,0,1,0]], n_keys_per_class, axis=0),
+                    np.repeat([[0,0,0,0,0,0,0,0,0,1]], n_keys_per_class, axis=0)))
 n_keys= values.shape[0]
 V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
 
@@ -156,7 +156,7 @@ def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
     return model
 
 
-def fit_evaluate( model, x_train, y_train,  y_test, x_test, batch_size, epochs, lr):
+def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr):
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                 # optimizer=keras.optimizers.SGD(lr=0.1),
