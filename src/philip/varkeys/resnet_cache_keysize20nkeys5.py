@@ -17,9 +17,12 @@ from keras.layers import GlobalAveragePooling2D, Dense
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Model
 from keras.layers import Layer
-from skimage.transform import resize
+
 
 import matplotlib.pyplot as plt
+
+KEY_SIZE = 20
+NUM_KEYS = 5
 
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
@@ -102,14 +105,16 @@ class Varkeys(Layer):
 
     def kernel (self, A,B):
         print('im in kernel function!!')
-        d = self.sq_distance(A,B)
+        d = self.sq_distance(A,B)/10000
         o = tf.reciprocal(d+1e-4)
         return o  
 
 def one_hot(length, i):
     return [1 if idx==i else 0 for idx in range(length)]
 
-values = [one_hot(10, i) for i in range(num_classes)] * 3
+
+
+values = [one_hot(10, i) for i in range(num_classes)] * NUM_KEYS
 n_keys= len(values)
 n_output = y_train.shape[1]
 V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
@@ -120,8 +125,8 @@ base_model = ResNet50(weights=None,include_top=False, input_shape=input_shape)
 x = base_model.output
 x = GlobalAveragePooling2D()(x)
 # let's add a fully-connected layer
-x = Dense(512, activation='relu')(x)
-predictions = Varkeys(512, n_keys, V, num_classes)(x)
+x = Dense(KEY_SIZE, activation='relu')(x)
+predictions = Varkeys(KEY_SIZE, n_keys, V, num_classes)(x)
 # and a logistic layer -- 10 classes for CIFAR10
 #predictions = Dense(num_classes, activation='softmax')(x)
 
@@ -136,7 +141,7 @@ model.compile(
     metrics=['accuracy']
 )
 
-history = model.fit(x_train, y_train, validation_data=(x_test, y_test),  epochs=20)
+history = model.fit(x_train, y_train, validation_data=(x_test, y_test),  epochs=15)
 model.evaluate(x_test, y_test)
 
 np.save('accuracy', np.array(history.history['acc']))
@@ -147,7 +152,7 @@ plt.plot(history.history['val_acc'])
 plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
-plt.savefig('learningcurve')
+plt.savefig('learningcurve_keysize={}&nkeys={}'.format(KEY_SIZE, NUM_KEYS) )
 
 
 
