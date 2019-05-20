@@ -176,21 +176,23 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
 batch_size = 64
 lr = 0.0001
 epochs = 30
+embedding_dimensions = [20, 50, 100, 300, 500, 1000]
 
 perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
-for p in perc_data:
-
+for dim in embedding_dimensions:
+    p =1.0
     print("Pecentage of training =", p)
+    print("Embedding Size Currently Used =", dim)
     #x_train = np
     idx = np.random.choice(num_samples, int(p*num_samples))
     x_train_ = x_train[idx, ]
     y_train_ = y_train[idx,]
 
     print("CNN+Keys...")
-    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
+    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = dim, num_classes=10, n_keys= n_keys, V=V)
     fit_evaluate( model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
 
 
     print("CNN...")
-    model2 = CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10)
+    model2 = CNN(layers=[32, 64, 512], embedding_dim = dim, num_classes=10)
     fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
