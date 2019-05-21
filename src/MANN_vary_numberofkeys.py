@@ -170,7 +170,7 @@ lr = 0.0001
 # epochs should be 100
 epochs = 100
 # this script varies
-numbers_of_keys_per_class = range(50, 1000, 50)
+numbers_of_keys_per_class = range(50, 10001, 50)
 
 #perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
 perc_data = [1.0]
