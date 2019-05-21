@@ -172,7 +172,7 @@ epochs = 100
 # this script varies
 numbers_of_keys_per_class = range(50, 1000, 50)
 
-perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
+#perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
 perc_data = [1.0]
 # percentage should be 1.0
 # perc_data = [0.1]
