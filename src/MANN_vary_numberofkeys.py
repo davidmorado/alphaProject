@@ -172,8 +172,8 @@ epochs = 100
 # this script varies the memory module size
 numbers_of_keys_per_class = range(50, 10001, 50)
 
-p = [1.0]
-#p = [0.1]
+p = 1.0
+#p = 0.1
 
 for n_keys_per_class in numbers_of_keys_per_class:
   
