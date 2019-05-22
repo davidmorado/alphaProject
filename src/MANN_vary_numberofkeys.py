@@ -1,4 +1,5 @@
 import tensorflow as tf
+import pickle
 
 #Definition of the Model
 from keras.models import Model
@@ -167,43 +168,30 @@ n_output = 10
 embedding_dim = 20
 batch_size = 64
 lr = 0.0001
-# epochs should be 100
 epochs = 100
-# this script varies
+# this script varies the memory module size
 numbers_of_keys_per_class = range(50, 10001, 50)
 
-#perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
-perc_data = [1.0]
-# percentage should be 1.0
-# perc_data = [0.1]
+p = [1.0]
+#p = [0.1]
 
-import pickle
+for n_keys_per_class in numbers_of_keys_per_class:
+  
+    values = np.repeat(np.eye(10, dtype=int), n_keys_per_class, axis = 0)
+    n_keys= values.shape[0]
+    V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
 
-for p in perc_data:
+    print("Percentage of training =", p)
+    idx = np.random.choice(num_samples, int(p*num_samples))
+    x_train_ = x_train[idx,]
+    y_train_ = y_train[idx,]
 
-    for n_keys_class in numbers_of_keys_per_class:
-      
-        n_keys_per_class = n_keys_class
-        values = np.repeat(np.eye(10), n_keys_per_class, axis = 0)
-        n_keys= values.shape[0]
-        V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
-
-        print("Percentage of training =", p)
-        idx = np.random.choice(num_samples, int(p*num_samples))
-        x_train_ = x_train[idx,]
-        y_train_ = y_train[idx,]
-
-        print("CNN+Keys...")
-        print("CNN with " + str(n_keys_class) + " keys per class.")
-        model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
-        results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
-        
-        filename = "results/CNN_" + str(n_keys_class) + "_keys.pkl"
-        
-        with open(filename, 'wb') as f:
-          pickle.dump(results, f)
-
-
-        #print("CNN...")
-        #model2 = CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10)
-        #fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+    print("CNN+Keys...")
+    print("CNN with " + str(n_keys_per_class) + " keys per class.")
+    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
+    results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+    
+    filename = "results/CNN_" + str(n_keys_per_class) + "_keys.pkl"
+    
+    with open(filename, 'wb') as f:
+      pickle.dump(results, f)
