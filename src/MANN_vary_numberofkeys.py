@@ -158,7 +158,7 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
             verbose=1,
             validation_data=(x_test, y_test))
 
-    memory = history.layers[-1].get_memory()
+    memory = model.layers[-1].get_memory()
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']
