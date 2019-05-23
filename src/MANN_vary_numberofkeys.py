@@ -13,7 +13,7 @@ class Varkeys(Layer):
 
     def __init__(self, keysize, dict_size, values, categories, **kwargs):
         self.output_dim = keysize
-        self.initializer = keras.initializers.TruncatedNormal(mean=0.0, stddev=0.1, seed=None)
+        self.initializer = keras.initializers.TruncatedNormal(mean=0.0, stddev=3, seed=None)
         #self.initializer = keras.initializers.random_uniform([dict_size, keysize],maxval=1)
         self.values = values
         self.categories = categories
@@ -192,7 +192,8 @@ for n_keys_per_class in numbers_of_keys_per_class:
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
     results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
 
-    plot_model(model1, to_file='results/CNN_' + str(n_keys_per_class) + '_keys_graph.png')
+    if n_keys_per_class < 200:
+        plot_model(model1, to_file='results/CNN_' + str(n_keys_per_class) + '_keys_graph.png')
     
     filename = "results/CNN_" + str(n_keys_per_class) + "_keys.pkl"
     
