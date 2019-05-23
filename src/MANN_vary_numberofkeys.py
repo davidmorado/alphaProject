@@ -39,6 +39,8 @@ class Varkeys(Layer):
     def compute_output_shape(self, input_shape):
         return (input_shape[0], self.categories)
 
+    def get_memory(self):
+        return self.keys
     
     def sq_distance(self, A, B):
         # print('im in distance function')
@@ -155,6 +157,8 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test))
+
+    memory = history.layers[-1].get_memory()
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']
@@ -163,7 +167,7 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
     
     scores = model.evaluate(x_test, y_test)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
-    return val_acc, acc, loss, val_loss, scores
+    return val_acc, acc, loss, val_loss, scores, memory
     
 n_output = 10
 embedding_dim = 20
