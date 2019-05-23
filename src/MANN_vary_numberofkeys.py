@@ -1,12 +1,13 @@
 import tensorflow as tf
 import pickle
+import keras
 
 #Definition of the Model
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
-
+from keras.utils import plot_model
 from keras.layers import Layer
-import keras
+
 
 class Varkeys(Layer):
 
@@ -110,36 +111,36 @@ def CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= 1
     return model
 
 
-def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
+# def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
 
-    model = Sequential()
+#     model = Sequential()
 
-    model.add(Conv2D(layers[0], (3, 3), padding='same',
-                    input_shape=x_train.shape[1:]))
-    model.add(Activation('relu'))
-    model.add(Conv2D(layers[0], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+#     model.add(Conv2D(layers[0], (3, 3), padding='same',
+#                     input_shape=x_train.shape[1:]))
+#     model.add(Activation('relu'))
+#     model.add(Conv2D(layers[0], (3, 3)))
+#     model.add(Activation('relu'))
+#     model.add(MaxPooling2D(pool_size=(2, 2)))
+#     model.add(Dropout(0.25))
 
-    model.add(Conv2D(layers[1], (3, 3), padding='same'))
-    model.add(Activation('relu'))
-    model.add(Conv2D(layers[1], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+#     model.add(Conv2D(layers[1], (3, 3), padding='same'))
+#     model.add(Activation('relu'))
+#     model.add(Conv2D(layers[1], (3, 3)))
+#     model.add(Activation('relu'))
+#     model.add(MaxPooling2D(pool_size=(2, 2)))
+#     model.add(Dropout(0.25))
 
-    model.add(Flatten())
-    model.add(Dense(layers[2]))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(embedding_dim))
-    model.add(Activation('sigmoid'))
-    model.add(BatchNormalization())
-    model.add(Dense(num_classes))
-    model.add(Activation('softmax'))  
+#     model.add(Flatten())
+#     model.add(Dense(layers[2]))
+#     model.add(Activation('relu'))
+#     model.add(Dropout(0.5))
+#     model.add(Dense(embedding_dim))
+#     model.add(Activation('sigmoid'))
+#     model.add(BatchNormalization())
+#     model.add(Dense(num_classes))
+#     model.add(Activation('softmax'))  
 
-    return model
+#     return model
 
 
 def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr):
@@ -190,6 +191,8 @@ for n_keys_per_class in numbers_of_keys_per_class:
     print("CNN with " + str(n_keys_per_class) + " keys per class.")
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
     results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+
+    plot_model(model1, to_file='results/CNN_' + str(n_keys_per_class) + '_keys_graph.png')
     
     filename = "results/CNN_" + str(n_keys_per_class) + "_keys.pkl"
     
