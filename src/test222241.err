@@ -1,0 +1,6 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "MANN_vary_numberofkeys.py", line 185, in <module>
+    idx = np.random.choice(num_samples, int(p*num_samples))
+TypeError: int() argument must be a string, a bytes-like object or a number, not 'list'
+srun: error: gpu-015: task 0: Exited with exit code 1
