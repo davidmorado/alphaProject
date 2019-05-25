@@ -162,7 +162,7 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']
-    loss = historyq.history['loss']
+    loss = history.history['loss']
     val_loss = history.history['val_loss']
     
     scores = model.evaluate(x_test, y_test)
