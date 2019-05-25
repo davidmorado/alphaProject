@@ -1,0 +1,10 @@
+2019-05-25 09:57:46.501200: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-05-25 09:57:47.138736: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: GeForce RTX 2080 Ti major: 7 minor: 5 memoryClockRate(GHz): 1.545
+pciBusID: 0000:03:00.0
+totalMemory: 10.73GiB freeMemory: 10.53GiB
+2019-05-25 09:57:47.138779: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2019-05-25 09:57:47.834574: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-05-25 09:57:47.834637: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2019-05-25 09:57:47.834656: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2019-05-25 09:57:47.836869: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10168 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2080 Ti, pci bus id: 0000:03:00.0, compute capability: 7.5)
