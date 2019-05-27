@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 #Definition of the Model
 from keras.models import Model
@@ -6,6 +7,9 @@ from keras.layers.normalization import BatchNormalization
 
 from keras.layers import Layer
 import keras
+
+def saveResults(file_name, data):
+  np.savetxt(file_name+".csv", data, delimiter=",", fmt= '%.4e')
 
 class Varkeys(Layer):
 
@@ -39,7 +43,6 @@ class Varkeys(Layer):
 
     
     def sq_distance(self, A, B):
-        print('im in distance function')
         row_norms_A = tf.reduce_sum(tf.square(A), axis=1)
         row_norms_A = tf.reshape(row_norms_A, [-1, 1])  # Column vector.
 
@@ -50,7 +53,6 @@ class Varkeys(Layer):
 
 
     def kernel (self, A,B):
-        print('im in kernel function!!')
         d = self.sq_distance(A,B)/10000
         o = tf.reciprocal(d+1e-4)
         #o = tf.exp(-d/10)
@@ -169,15 +171,22 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
             verbose=1,
             validation_data=(x_test, y_test))
 
-    scores = model.evaluate(x_test, y_test)
-    print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+    scores_test = model.evaluate(x_test, y_test)
+    print("\n%s: %.2f%%" % (model.metrics_names[1], scores_test[1]*100))
+    
+    scores_train = model.evaluate(x_train, y_train)
+    print("\n%s: %.2f%%" % (model.metrics_names[1], scores_train[1]*100))
+    
+    return scores_test, scores_train
 
 
 batch_size = 64
 lr = 0.0001
-epochs = 30
-embedding_dimensions = [20, 50, 100, 300, 500, 1000]
+epochs = 100
+embedding_dimensions = [10, 25, 50, 100, 200, 300, 400, 500, 750, 1000]
 
+withKeys_results = []
+cnn_results = []
 perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
 for dim in embedding_dimensions:
     p =1.0
@@ -190,9 +199,17 @@ for dim in embedding_dimensions:
 
     print("CNN+Keys...")
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = dim, num_classes=10, n_keys= n_keys, V=V)
-    fit_evaluate( model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+    test_stats, train_stats = fit_evaluate( model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+    print('Test Stats', test_stats)
+    
+    withKeys_results.append([dim] + test_stats + train_stats)
 
 
     print("CNN...")
     model2 = CNN(layers=[32, 64, 512], embedding_dim = dim, num_classes=10)
-    fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+    test_stats, train_stats = fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
+    
+    cnn_results.append([dim] + test_stats + train_stats)
+    
+saveResults('cnn_withKeys',withKeys_results)
+saveResults('cnn',cnn_results)
