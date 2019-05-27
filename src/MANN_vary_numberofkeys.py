@@ -135,8 +135,8 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
             callbacks = [tbCallBack])
 
     memory = model.layers[-1].get_memory()
-    saveResults('model_keys/keys', memory)
-    #memory = tf.Session().run(memory)
+    #saveResults('model_keys/keys', memory)
+    memory = tf.Session().run(memory)
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']
@@ -145,7 +145,7 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
     
     scores = model.evaluate(x_test, y_test)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
-    return val_acc, acc, loss, val_loss, scores
+    return val_acc, acc, loss, val_loss, scores, memory
     
 n_output = 10
 embedding_dim = 20
@@ -174,7 +174,7 @@ for n_keys_per_class in numbers_of_keys_per_class:
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
     results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
     
-    filename = "results/CNN_" + str(n_keys_per_class) + "_keys.pkl"
+    filename = "results2/CNN_" + str(n_keys_per_class) + "_keys.pkl"
     
     with open(filename, 'wb') as f:
       pickle.dump(results, f)
