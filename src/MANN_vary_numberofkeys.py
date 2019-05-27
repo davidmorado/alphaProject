@@ -196,8 +196,8 @@ for n_keys_per_class in numbers_of_keys_per_class:
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
     results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
 
-    if n_keys_per_class < 200:
-        plot_model(model1, to_file='results/CNN_' + str(n_keys_per_class) + '_keys_graph.png')
+    #if n_keys_per_class < 200:
+    #    plot_model(model1, to_file='results/CNN_' + str(n_keys_per_class) + '_keys_graph.png')
     
     filename = "results/CNN_" + str(n_keys_per_class) + "_keys.pkl"
     
