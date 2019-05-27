@@ -134,7 +134,7 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
             callbacks = [tbCallBack])
 
     memory = model.layers[-1].get_memory()
-    saveResults('model_keys/keys', memory)
+    memory = tf.Session().run(memory)
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']
@@ -143,7 +143,7 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
     
     scores = model.evaluate(x_test, y_test)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
-    return val_acc, acc, loss, val_loss, scores, memory.eval()
+    return val_acc, acc, loss, val_loss, scores, memory
     
 n_output = 10
 embedding_dim = 20
