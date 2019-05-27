@@ -1,6 +1,7 @@
 import tensorflow as tf
 import pickle
 import keras
+import numpy as np
 
 #Definition of the Model
 from keras.models import Model
