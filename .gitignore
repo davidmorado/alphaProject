@@ -13,3 +13,7 @@ data
 ### Python ###
 __pycache__/
 
+.DS_Store
+src/friedi/CIFAR10-img-classification-tensorflow
+src/friedi/breastcancer_logs/
+src/friedi/cifar-10-python.tar.gz
