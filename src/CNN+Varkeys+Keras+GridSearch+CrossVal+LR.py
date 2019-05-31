@@ -1,8 +1,10 @@
 import tensorflow as tf
+
+#Definition of the Model
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
 from sklearn.model_selection import train_test_split
-import numpy as np
+
 from keras.layers import Layer
 import keras
 
@@ -77,9 +79,9 @@ import keras
 
 import numpy as np
 
-(x_train_, y_train_), (x_test, y_test) = cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
 
-x_train, x_val, y_train, y_val = train_test_split( x_train_, y_train_, test_size=0.33, random_state=42)
+x_train, x_val, y_train, y_val = train_test_split( x_train, y_train, test_size=0.33, random_state=42)
 
 print("x_val", x_val.shape)
 
@@ -90,12 +92,9 @@ num_samples = x_train.shape[0]
 x_train = x_train/255
 x_test = x_test/255
 x_val = x_val/255
-x_train_= x_train_/255
-
-y_train_ = keras.utils.to_categorical(y_train_, num_classes)
-y_train = keras.utils.to_categorical(y_train, num_classes)
-y_test = keras.utils.to_categorical(y_test, num_classes)
-y_val = keras.utils.to_categorical(y_val, num_classes)
+#y_train = keras.utils.to_categorical(y_train, num_classes)
+#y_test = keras.utils.to_categorical(y_test, num_classes)
+#y_val = keras.utils.to_categorical(y_val, num_classes)
 
 def create_dict(n_keys_per_class):
   
@@ -174,24 +173,9 @@ def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
     return model
 
 
-def custom_loss(layer, sigma, custom=1):
+def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr):
 
-    # Create a loss function that adds the MSE loss to the mean of all squared activations of a specific layer
-    def loss(y_true,y_pred):
-
-      if(custom==1):
-        return keras.losses.categorical_crossentropy(y_true=y_true, y_pred=y_pred)+sigma*tf.reduce_mean(layer.kernel(layer.keys, layer.keys))# + sigma*tf.reduce_mean(layer.kernel(layer.keys, layer.keys) , axis=-1)
-      else:
-        return keras.losses.categorical_crossentropy(y_true=y_true, y_pred=y_pred)
-   
-    # Return a function
-    return loss
-    
-
-
-def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr, sigma=0.001, custom=1):
-
-    model.compile(loss=custom_loss(model.layers[-1], sigma, custom),#keras.losses.categorical_crossentropy,
+    model.compile(loss=keras.losses.categorical_crossentropy,
                 # optimizer=keras.optimizers.SGD(lr=0.1),
                 optimizer = keras.optimizers.rmsprop(lr=lr, decay=1e-6),
                 metrics=['accuracy'])
@@ -199,99 +183,47 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
     model.fit(x_train, y_train,
             batch_size=  batch_size,
             epochs=epochs,
-            verbose=0,
-            validation_data=(x_test, y_test))
+            verbose=1)
 
-    scores_train = model.evaluate(x_train, y_train, verbose = 0)
-    scores_test = model.evaluate(x_test, y_test, verbose= 0)
+    scores_train = model.evaluate(x_train, y_train, verbose=1)
+    scores_test = model.evaluate(x_test, y_test, verbose =1)
     print("Train \n%s: %.2f%%" % (model.metrics_names[1], scores_train[1]*100))
     print("Val \n%s: %.2f%%" % (model.metrics_names[1], scores_test[1]*100))
     
-    return scores_train, scores_test
-       
+    return scores_test
+
+
 batch_size = 64
 epochs = 100
 n_output = 10
-n_hype_try = 50
+nk = 2
+bandwidth = 10000
+ed = 20
+l_list = [0.001, 0.0005, 0.0001, 0.00005, 0.00001, 0.000005, 0.000001]
 
-def scale(value, min_v, max_v):
-  return min_v + (value * (max_v - min_v))
+from sklearn.model_selection import StratifiedKFold
 
-lim_lr =(-5, -1)
-lim_embedding = (1, 4)
-lim_n_keys = (1, 3)
-lim_bandwidth = (2, 6)
-lim_sigma =  (-6, -0.5)
-
-best_score1 = [0, 0, 0, 0]
-best_score2 = [0, 0, 0, 0]
-hyp_list = []
-perf_list = []
-
-for i in range(50):
-
-  l = 10**scale(np.random.rand(), lim_lr[0], lim_lr[1])
-  ed = int(10**scale(np.random.rand(), lim_embedding[0], lim_embedding[1]))
-  nk = int(10**scale(np.random.rand(), lim_n_keys[0], lim_n_keys[1]))
-  b =  int(10**scale(np.random.rand(), lim_bandwidth[0], lim_bandwidth[1]))
-  s = 10**scale(np.random.rand(), lim_sigma[0], lim_sigma[1])
-  
-  print("Parameters ... B: ", b," L: ", l, " ED: ",ed, "NK:", nk , "S:", s)
+scores = []
+for l in l_list:
+          
   values = create_dict(nk)
   n_keys= values.shape[0]
   V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
-          
-  print("CNN+Keys...")
-  model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = ed, num_classes=10, n_keys= n_keys, bandwidth=b, V=V)
-  scores_train1, scores_test1 = fit_evaluate( model1, x_train, y_train, x_val, y_val, batch_size, epochs, l, sigma=s, custom=1)
 
-  print("CNN...")
-  model2 = CNN(layers=[32, 64, 512], embedding_dim = ed, num_classes=10)
-  scores_train2, scores_test2 = fit_evaluate( model2, x_train, y_train, x_val, y_val, batch_size, epochs, l, sigma=s, custom=0)
+  kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
+  cvscores = []
+
+  for train, test in kfold.split(x_train, y_train):
   
-  hyp_list.append([b, l, ed, nk, s])
-  perf_list.append([scores_train1, scores_test1, scores_train2, scores_test2])
-  if(scores_test1[1]>best_score1[1]):
-      best_hyperparameters1 = (b, l, ed, nk)
-      best_score1[0] = scores_train1[1]
-      best_score1[1] = scores_test1[1]
-      best_score1[2] = scores_train2[1]
-      best_score1[3] = scores_test2[1]
-
-  if(scores_test2[1]>best_score2[3]):
-      best_hyperparameters2 = (b, l, ed, nk)
-      best_score2[0] = scores_train1[1]
-      best_score2[1] = scores_test1[1]
-      best_score2[2] = scores_train2[1]
-      best_score2[3] = scores_test2[1]
-
-
-
-
-b, l, ed, nk = best_hyperparameters1 
-values = create_dict(nk)
-n_keys= values.shape[0]
-V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
-          
-print("CNN+Keys...")
-model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = ed, num_classes=10, n_keys= n_keys, bandwidth=b, V=V)
-scores_train1, scores_test1 = fit_evaluate( model1, x_train_, y_train_, x_test, y_test, batch_size, epochs*2, l, sigma=s, custom=1)
-
-b, l, ed, nk = best_hyperparameters2
-
-print("CNN...")
-model2 = CNN(layers=[32, 64, 512], embedding_dim = ed, num_classes=10)
-scores_train2, scores_test2 = fit_evaluate( model2, x_train_, y_train_, x_test, y_test, batch_size, epochs*2, l, sigma=s, custom=0)
-
-print("Best score train1:", scores_train1)
-print("Best score test1:", scores_test1)
-print("Best hyperparameters1:", best_hyperparameters1)
-
-print("Best score train2:", scores_train2)
-print("Best score test2:", scores_test2)
-print("Best hyperparameters2:", best_hyperparameters2)
-
+    print("CNN+Keys...")
+    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = ed, num_classes=10, n_keys= n_keys, bandwidth=bandwidth, V=V)
+    y_tr =  keras.utils.to_categorical(y_train[train], num_classes)
+    y_te =  keras.utils.to_categorical(y_train[test], num_classes)
+    scores_test= fit_evaluate( model1, x_train[train], y_tr, x_train[test], y_te, batch_size, epochs, l)
+    cvscores.append(scores_test[1])
+  scores.append(cvscores)
+  
 import pickle
 
-with open("performance_custom_loss", 'wb') as f:
-    pickle.dump([hyp_list, perf_list], f)
+with open("scores_LR", 'wb') as f:
+    pickle.dump(scores, f)

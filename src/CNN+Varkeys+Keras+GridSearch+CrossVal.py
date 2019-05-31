@@ -5,7 +5,6 @@ from keras.models import Model
 from keras.layers.normalization import BatchNormalization
 from sklearn.model_selection import train_test_split
 
-
 from keras.layers import Layer
 import keras
 
