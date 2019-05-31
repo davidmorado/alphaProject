@@ -6,6 +6,12 @@ from scipy import linalg
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
+#Initializing noisy non linear data
+x = np.linspace(0,1,100).astype(float)
+noise = np.random.normal(loc = 0, scale = .25, size = 100)
+y = np.sin(x * 1.5 * np.pi ) 
+y_noise = y + noise
+
 #defining functions
 def sq_distance(A, B):
 
@@ -35,31 +41,22 @@ X_test = tf.placeholder(tf.float32, shape = (None,  n_input))
 K = kernel(X, X_test, tau)
 y_pred = tf.add(tf.multiply(X, W), b) 
 
-# Mean Squared Error Cost Function 
+# Mean Squared Error Cost Function using the kernel funcion as weight
 res = tf.pow(y_pred-Y, 2)
 cost =tf.reduce_sum(tf.multiply(res,K))
-#cost = tf.reduce_sum(tf.multiply(tf.transpose(K),tf.pow(y_pred-Y, 2)))
-#cost = tf.reduce_sum(tf.pow(y_pred-Y, 2))
 
-  
 # Gradient Descent Optimizer 
 learning_rate = 0.0005
 optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost) 
   
-#Initializing noisy non linear data
-x = np.linspace(0,1,100).astype(float)
-noise = np.random.normal(loc = 0, scale = .25, size = 100)
-y = np.sin(x * 1.5 * np.pi ) 
-y_noise = y + noise
-
 #running the graph
 init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 
+#running local linear regression for only one example
 x_test = np.array([0.1])
-
-n_iterations = 1000
+n_iterations = 100
 
 for i in range(n_iterations):
 
@@ -72,7 +69,12 @@ y_true = np.sin(x_test * 1.5 * np.pi )
 print("y pred:", y_pred_)
 print("y true:", y_true)
                    
-def pred_wlr(X_train, X_to_pred, optimizer, y_pred, n_iterations=1000, t=0.001):
+#Making predictions for several points
+def pred_wlr(X_train, X_to_pred, optimizer, y_pred, n_iterations=100, t=0.001):
+    
+    '''This function enables to make predictions using weighted linear regression
+       on several query points. For every query point, a new linear model is trained.
+    '''
     
     y_pred_list = []
     
@@ -97,13 +99,30 @@ t_list = [0.0001, 0.001, 0.005, 0.05, 0.5, 1, 2]
 
 for t_ in t_list:
       
-    y_pred_ = pred_wlr(x,x, optimizer, y_pred, t=t_)
+    y_pred_ = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_)
     y_true = np.sin(x * 1.5 * np.pi ) 
     r = rmse(y_pred_, y_true)
-
     rmse_list.append(r)
-    
-plt.plot(y_pred_, c="r")
-plt.plot(y_true, c="b")
+
+plt.plot(rmse_list)
 plt.grid()
-plt.legend(["Prediction", "Ground Truth"])
+
+
+#making plots to interpret reults
+t_over = t_list[0]
+t_perf = t_list[2]
+t_under = t_list[5]
+
+y_pred_over = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_over)
+y_pred_perf = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_perf)
+y_pred_under = pred_wlr(x,x, optimizer, y_pred, n_iterations=100, t=t_under)
+
+plt.figure()
+plt.plot(y_pred_over, c="r")
+plt.plot(y_pred_perf, c="b")
+plt.plot(y_pred_under, c="y")
+plt.plot(y_true, c="g")
+plt.plot(y_noise, 'black')
+ 
+plt.grid()
+plt.legend(["Prediction with overfitting",  "Prediction just right", "Prediction with underfitting",  "Ground Truth", "Groud Truth with Noise"])
