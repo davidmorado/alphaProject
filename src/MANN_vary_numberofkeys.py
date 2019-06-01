@@ -84,7 +84,11 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
 
-def CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= 100, V=[]):
+def CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys_per_class=100):
+
+	values = np.repeat(np.eye(10, dtype=int), n_keys_per_class, axis = 0)
+    n_keys= values.shape[0]
+    V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
         
     model = Sequential()
 
@@ -153,17 +157,13 @@ batch_size = 64
 lr = 0.0001
 epochs = 100
 # this script varies the memory module size
-numbers_of_keys_per_class = range(1, 50, 1)
+numbers_of_keys_per_class = range(10, 201, 10)
 
 p = 1.0
 #p = 0.1
 
 for n_keys_per_class in numbers_of_keys_per_class:
   
-    values = np.repeat(np.eye(10, dtype=int), n_keys_per_class, axis = 0)
-    n_keys= values.shape[0]
-    V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
-
     print("Percentage of training =", p)
     idx = np.random.choice(num_samples, int(p*num_samples))
     x_train_ = x_train[idx,]
@@ -171,7 +171,7 @@ for n_keys_per_class in numbers_of_keys_per_class:
 
     print("CNN+Keys...")
     print("CNN with " + str(n_keys_per_class) + " keys per class.")
-    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
+    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys_per_class=n_keys_per_class)
     results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
     
     filename = "results3/CNN_" + str(n_keys_per_class) + "_keys.pkl"
