@@ -86,9 +86,9 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 def CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys_per_class=100):
 
-	values = np.repeat(np.eye(10, dtype=int), n_keys_per_class, axis = 0)
-	n_keys= values.shape[0]
-	V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
+    values = np.repeat(np.eye(10, dtype=int), n_keys_per_class, axis = 0)
+    n_keys= values.shape[0]
+    V = tf.constant(values, dtype=tf.float32, shape = (n_keys, n_output))
         
     model = Sequential()
 
