@@ -153,7 +153,7 @@ batch_size = 64
 lr = 0.0001
 epochs = 100
 # this script varies the memory module size
-numbers_of_keys_per_class = range(1, 50, 1)
+numbers_of_keys_per_class = range(50, 10001, 50)
 
 p = 1.0
 #p = 0.1
@@ -174,7 +174,7 @@ for n_keys_per_class in numbers_of_keys_per_class:
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys= n_keys, V=V)
     results = fit_evaluate(model1, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
     
-    filename = "results3/CNN_" + str(n_keys_per_class) + "_keys.pkl"
+    filename = "results2/CNN_" + str(n_keys_per_class) + "_keys.pkl"
     
     with open(filename, 'wb') as f:
       pickle.dump(results, f)
