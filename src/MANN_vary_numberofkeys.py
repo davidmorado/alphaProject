@@ -153,7 +153,8 @@ batch_size = 64
 lr = 0.0001
 epochs = 100
 # this script varies the memory module size
-numbers_of_keys_per_class = range(50, 10001, 50)
+# numbers_of_keys_per_class = range(50, 10001, 50)
+numbers_of_keys_per_class = range(10, 201, 10)
 
 p = 1.0
 #p = 0.1

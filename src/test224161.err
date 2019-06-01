@@ -1,0 +1,14 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "MANN_vary_numberofkeys.py", line 174, in <module>
+    model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = 20, num_classes=10, n_keys_per_class=n_keys_per_class)
+  File "MANN_vary_numberofkeys.py", line 117, in CNN_keys
+    model.add(Varkeys(embedding_dim, n_keys, V, num_classes))
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/keras/engine/sequential.py", line 181, in add
+    output_tensor = layer(self.outputs[0])
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/keras/engine/base_layer.py", line 457, in __call__
+    output = self.call(inputs, **kwargs)
+  File "MANN_vary_numberofkeys.py", line 37, in call
+    KV =  tf.matmul(tf.transpose(self.kernel(self.keys, x)), V)
+NameError: name 'V' is not defined
+srun: error: gpu-015: task 0: Exited with exit code 1
