@@ -183,14 +183,14 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
     model.fit(x_train, y_train,
             batch_size=  batch_size,
             epochs=epochs,
-            verbose=1)
+            verbose=0)
 
-    scores_train = model.evaluate(x_train, y_train, verbose=1)
-    scores_test = model.evaluate(x_test, y_test, verbose =1)
+    scores_train = model.evaluate(x_train, y_train, verbose=0)
+    scores_test = model.evaluate(x_test, y_test, verbose =0)
     print("Train \n%s: %.2f%%" % (model.metrics_names[1], scores_train[1]*100))
     print("Val \n%s: %.2f%%" % (model.metrics_names[1], scores_test[1]*100))
     
-    return scores_test
+    return scores_train, scores_test
 
 
 batch_size = 64
@@ -212,7 +212,8 @@ for ed in ed_list:
    
 
   kfold = StratifiedKFold(n_splits=5, shuffle=True, random_state=1)
-  cvscores = []
+  cvscores_train = []
+  cvscores_test = []
 
   for train, test in kfold.split(x_train, y_train):
   
@@ -220,9 +221,10 @@ for ed in ed_list:
     model1 = CNN_keys(layers=[32, 64, 512], embedding_dim = ed, num_classes=10, n_keys= n_keys, bandwidth=bandwidth, V=V)
     y_tr =  keras.utils.to_categorical(y_train[train], num_classes)
     y_te =  keras.utils.to_categorical(y_train[test], num_classes)
-    scores_test= fit_evaluate( model1, x_train[train], y_tr, x_train[test], y_te, batch_size, epochs, l)
-    cvscores.append(scores_test[1])
-  scores.append(cvscores)
+    scores_train, scores_test= fit_evaluate( model1, x_train[train], y_tr, x_train[test], y_te, batch_size, epochs, l)
+    cvscores_train.append(scores_train[1])
+    cvscores_test.append(scores_test[1])
+  scores.append([cvscores_train, cvscores_test])
   
 import pickle
 
