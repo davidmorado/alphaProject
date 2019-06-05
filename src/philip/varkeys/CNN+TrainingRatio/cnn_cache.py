@@ -240,67 +240,126 @@ def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
 
 
 # use memory:
-if MEMORY == 1:
-    model = CNN_keys(embedding_dim = KEY_SIZE, num_classes=NUM_CLASSES, n_keys= n_keys, V=V)
+model1 = CNN_keys(embedding_dim = KEY_SIZE, num_classes=NUM_CLASSES, n_keys= n_keys, V=V)
 
-else:
-    model = CNN(embedding_dim = KEY_SIZE, num_classes=NUM_CLASSES)
-
-
-model.compile(loss=keras.losses.categorical_crossentropy,
-            # optimizer=keras.optimizers.SGD(lr=0.1),
-            optimizer = keras.optimizers.rmsprop(lr=LR, decay=1e-6),
-            metrics=['accuracy'])
-# model.compile(
-#     #optimizer='Adam',
-#     optimizer=keras.optimizers.Adam(lr=LR),
-#     loss='categorical_crossentropy',
-#     metrics=['accuracy']
-# )
-
-# tensorboard
-tbCallBack = keras.callbacks.TensorBoard(log_dir='tb_logs/lr={}&memory={}'.format(LR, MEMORY), histogram_freq=0, write_graph=True, write_images=True)
-
-
-history = model.fit(x_train, y_train, validation_data=(x_test, y_test),  epochs=EPOCHS, verbose=2, callbacks = [tbCallBack], batch_size=batch_size)
-model.evaluate(x_test, y_test, verbose=1)
+# model without memory
+model2 = CNN(embedding_dim = KEY_SIZE, num_classes=NUM_CLASSES)
 
 
 
 
-plt.plot(history.history['acc'])#
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-if MEMORY == 1:
-    plt.savefig('plots/acc_lr={}.png'.format(LR) )
-else:
-    plt.savefig('plots/acc_momory=0&lr={}.png'.format(LR))
+
+
+
+
+
+
+def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr, use_memory, training_ratio):
+    # tensorboard
+    tbCallBack = keras.callbacks.TensorBoard(log_dir='tb_logs/lr={}&memory={}&TR={}'.format(lr, use_memory, training_ratio), histogram_freq=0, write_graph=True, write_images=True)
+
+    model.compile(loss=keras.losses.categorical_crossentropy,
+                optimizer = keras.optimizers.rmsprop(lr=lr, decay=1e-6),
+                metrics=['accuracy'])
+
+    model.fit(x_train, y_train, 
+                validation_data=(x_test, y_test),  
+                epochs=epochs, 
+                verbose=2, 
+                callbacks = [tbCallBack], 
+                batch_size=batch_size)
+
+    scores_train = model.evaluate(x_train, y_train, verbose=0)
+    scores_test = model.evaluate(x_test, y_test, verbose=0)
+    print("Train \n%s: %.2f%%" % (model.metrics_names[1], scores_train[1]*100))
+    print("Val \n%s: %.2f%%" % (model.metrics_names[1], scores_test[1]*100))
+
+    return scores_train, scores_test
+
+
+def sample(x, y, tr, n_classes):
+
+    sample_x = []
+    sample_y = []
+    
+    for category in range(n_classes):
+        idx_category = [idx for idx in range(y.shape[0]) if  y[idx, category] == 1]
+        x_tmp = x[idx_category]
+        y_tmp = y[idx_category]
+        n = int(x_tmp.shape[0] * tr)
+
+        sample_x.append(x_tmp[:n])
+        sample_y.append(y_tmp[:n])
+
+    sample_x = np.concatenate(sample_x, axis=0)
+    sample_y = np.concatenate(sample_y, axis=0)
+    return (sample_x, sample_y)
+
+
+
+    
+training_scores_memory = [] # list of lists: [ [loss, accuracy], ...]
+training_scores_no_memory = []
+
+test_scores_memory = []
+test_scores_no_memory = []
+
+training_ratios = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+training_ratios = [0.1, 0.2, 0.3]
+EPOCHS = 10
+
+# training ratios:
+for tr in training_ratios:
+
+    x_train_sample, y_train_sample = sample(x_train, y_train, tr, NUM_CLASSES)
+    print(x_train_sample.shape, y_train_sample.shape)
+
+    # with memory
+    score_train_memory, score_test_memory = fit_evaluate( model1, x_train_sample, y_train_sample, x_test,  y_test, batch_size=batch_size, epochs=EPOCHS, lr=LR, use_memory=1, training_ratio=tr)
+    
+    # without memory
+    score_train_no_memory, score_test_no_memory = fit_evaluate( model2, x_train_sample, y_train_sample, x_test,  y_test, batch_size=batch_size, epochs=EPOCHS, lr=LR, use_memory=0, training_ratio=tr)
+
+
+    training_scores_memory.append(score_train_memory)
+    test_scores_memory.append(score_test_memory)
+
+    training_scores_no_memory.append(score_train_no_memory)
+    test_scores_no_memory.append(score_test_no_memory)
+
+
+import pickle
+
+with open("data/test_scores_memory", 'wb') as f:
+    pickle.dump(test_scores_memory, f)
+
+with open("data/test_scores_no_memory", 'wb') as f:
+    pickle.dump(test_scores_no_memory, f)
+
+# load with:
+# mynewlist = pickle.load(f)
+
+# plot model performance with memory
+test_loss_memory, test_acc_memory = zip(*test_scores_memory)
+test_loss_no_memory, test_acc_no_memory = zip(*test_scores_no_memory)
+
+plt.plot(training_ratios, test_acc_memory, label='memory')#
+plt.plot(training_ratios, test_acc_no_memory, label='no memory')
+plt.title('Comparison on different training ratios')
+plt.ylabel('test accuracy')
+plt.xlabel('training ratio')
+plt.xticks(training_ratios)
+plt.legend()
+plt.savefig('plots/acc_lr={}.png'.format(LR) )
 plt.clf()
 
-plt.plot(history.history['loss'])#
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-if MEMORY == 1:
-    plt.savefig('plots/loss_lr={}.png'.format(LR) )
-else:
-    plt.savefig('plots/loss_momory=0&lr={}.png'.format(LR))   
+plt.plot(training_ratios, test_loss_memory, label='memory')#
+plt.plot(training_ratios, test_loss_no_memory, label='no memory')
+plt.title('Comparison on different training ratios')
+plt.ylabel('test loss')
+plt.xlabel('training ratio')
+plt.xticks(training_ratios)
+plt.legend()
+plt.savefig('plots/loss_lr={}.png'.format(LR) )
 plt.clf()
-
-if MEMORY == 1:
-    np.save('data/acc_lr={}'.format(LR), history.history['acc'])
-    np.save('data/val_acc_lr={}'.format(LR), history.history['val_acc'])
-
-    np.save('data/loss_lr={}'.format(LR), history.history['loss'])
-    np.save('data/val_loss_lr={}'.format(LR), history.history['val_loss'])
-else:
-    np.save('data/noCache_acc_lr={}'.format(LR), history.history['acc'])
-    np.save('data/noCache_val_acc_lr={}'.format(LR), history.history['val_acc'])
-
-    np.save('data/noCache_loss_lr={}'.format(LR), history.history['loss'])
-    np.save('data/noCache_val_loss_lr={}'.format(LR), history.history['val_loss'])
-
   
