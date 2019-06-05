@@ -1,17 +1,20 @@
-import keras
-from keras import Layer
+from keras.layers import Layer
+from keras.models import Model
+from keras.initializers import TruncatedNormal
+from keras.layers.normalization import BatchNormalization
 import tensorflow as tf
+import numpy as np
 
 class Varkeys(Layer):
 
-    def __init__(self, keysize, keys_per_class, values, categories, bandwith, **kwargs):
-        self.bandwith = bandwith
-        self.initializer = keras.initializers.TruncatedNormal(mean=0.0, stddev=3, seed=None)
-        self.categories = categories
-        self.keysize = keysize
-        self.dict_size = categories*keys_per_class
-        self.values = tf.constant(np.repeat(np.eye(categories, dtype=int), keys_per_class, axis = 0), 
-            dtype=tf.float32, shape = (self.dict_size, categories))
+    def __init__(self, keysize, n_keys_per_class, num_categories, bandwidth, **kwargs):
+        self.bandwidth = bandwidth
+        self.initializer = TruncatedNormal(mean=0.0, stddev=3, seed=None)
+        self.num_categories = num_categories
+        self.keysize = keysize # embedding_dim
+        self.dict_size = num_categories*n_keys_per_class
+        self.values = tf.constant(np.repeat(np.eye(num_categories, dtype=int), n_keys_per_class, axis = 0), 
+            dtype=tf.float32, shape = (self.dict_size, num_categories))
         super(Varkeys, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -26,18 +29,17 @@ class Varkeys(Layer):
     def call(self, x):
         # switch out with KNN if you want!
         KV =  tf.matmul(tf.transpose(self.kernel(self.keys, x)), self.values)
-        KV_ = tf.diag(tf.reshape(tf.reciprocal(tf.matmul(KV, tf.ones((self.categories,1)))), [-1]))
+        KV_ = tf.diag(tf.reshape(tf.reciprocal(tf.matmul(KV, tf.ones((self.num_categories,1)))), [-1]))
         output = tf.matmul(KV_, KV)
         return output
 
     def compute_output_shape(self, input_shape):
-        return (input_shape[0], self.categories)
+        return (input_shape[0], self.num_categories)
 
     def get_memory(self):
         return self.keys
     
     def sq_distance(self, A, B):
-        # print('im in distance function')
         row_norms_A = tf.reduce_sum(tf.square(A), axis=1)
         row_norms_A = tf.reshape(row_norms_A, [-1, 1])  # Column vector.
 
@@ -48,8 +50,7 @@ class Varkeys(Layer):
 
 
     def kernel (self, A,B):
-        # print('im in kernel function!!')
-        d = self.sq_distance(A,B)/self.bandwith
+        d = self.sq_distance(A,B)/self.bandwidth
         o = tf.reciprocal(d+1e-4)
         return o
 
