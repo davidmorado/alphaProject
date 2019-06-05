@@ -1,0 +1,41 @@
+Using TensorFlow backend.
+WARNING:tensorflow:From /home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/tensorflow/python/framework/op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+2019-05-28 08:18:22.472429: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-05-28 08:18:22.485152: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2100000000 Hz
+2019-05-28 08:18:22.490765: I tensorflow/compiler/xla/service/service.cc:150] XLA service 0x5566ace6a380 executing computations on platform Host. Devices:
+2019-05-28 08:18:22.490805: I tensorflow/compiler/xla/service/service.cc:158]   StreamExecutor device (0): <undefined>, <undefined>
+2019-05-28 08:18:23.194135: I tensorflow/compiler/xla/service/service.cc:150] XLA service 0x5566acf161f0 executing computations on platform CUDA. Devices:
+2019-05-28 08:18:23.194189: I tensorflow/compiler/xla/service/service.cc:158]   StreamExecutor device (0): GeForce RTX 2080 Ti, Compute Capability 7.5
+2019-05-28 08:18:23.196833: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1433] Found device 0 with properties: 
+name: GeForce RTX 2080 Ti major: 7 minor: 5 memoryClockRate(GHz): 1.545
+pciBusID: 0000:02:00.0
+totalMemory: 10.73GiB freeMemory: 10.53GiB
+2019-05-28 08:18:23.196872: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1512] Adding visible gpu devices: 0
+2019-05-28 08:18:23.203587: I tensorflow/core/common_runtime/gpu/gpu_device.cc:984] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-05-28 08:18:23.203621: I tensorflow/core/common_runtime/gpu/gpu_device.cc:990]      0 
+2019-05-28 08:18:23.203638: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1003] 0:   N 
+2019-05-28 08:18:23.206109: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10248 MB memory) -> physical GPU (device: 0, name: GeForce RTX 2080 Ti, pci bus id: 0000:02:00.0, compute capability: 7.5)
+/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/keras_applications/resnet50.py:265: UserWarning: The output shape of `ResNet50(include_top=False)` has been changed since Keras 2.2.0.
+  warnings.warn('The output shape of `ResNet50(include_top=False)` '
+Traceback (most recent call last):
+  File "/home/kurzendo/srp/varkeys/src/resnet_cache.py", line 150, in <module>
+    base_model = ResNet50(weights='imagenet',include_top=False, input_shape=input_shape)
+  File "/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/keras/applications/__init__.py", line 28, in wrapper
+    return base_fun(*args, **kwargs)
+  File "/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/keras/applications/resnet50.py", line 11, in ResNet50
+    return resnet50.ResNet50(*args, **kwargs)
+  File "/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/keras_applications/resnet50.py", line 291, in ResNet50
+    model.load_weights(weights_path)
+  File "/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/keras/engine/network.py", line 1157, in load_weights
+    with h5py.File(filepath, mode='r') as f:
+  File "/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/h5py/_hl/files.py", line 394, in __init__
+    swmr=swmr)
+  File "/home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/h5py/_hl/files.py", line 170, in make_fid
+    fid = h5f.open(name, flags, fapl=fapl)
+  File "h5py/_objects.pyx", line 54, in h5py._objects.with_phil.wrapper
+  File "h5py/_objects.pyx", line 55, in h5py._objects.with_phil.wrapper
+  File "h5py/h5f.pyx", line 85, in h5py.h5f.open
+OSError: Unable to open file (unable to lock file, errno = 37, error message = 'No locks available')
+srun: error: gpu-016: task 0: Exited with exit code 1

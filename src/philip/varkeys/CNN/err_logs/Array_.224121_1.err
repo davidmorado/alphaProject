@@ -1,0 +1,20 @@
+Using TensorFlow backend.
+WARNING:tensorflow:From /home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/tensorflow/python/framework/op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+WARNING:tensorflow:From /home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/keras/backend/tensorflow_backend.py:3445: calling dropout (from tensorflow.python.ops.nn_ops) with keep_prob is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `rate` instead of `keep_prob`. Rate should be set to `rate = 1 - keep_prob`.
+WARNING:tensorflow:From /home/kurzendo/miniconda3/envs/GPU/lib/python3.6/site-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+2019-05-31 11:57:39.512083: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2019-05-31 11:57:39.544023: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2100010000 Hz
+2019-05-31 11:57:39.548842: I tensorflow/compiler/xla/service/service.cc:150] XLA service 0x564e2ff3f3d0 executing computations on platform Host. Devices:
+2019-05-31 11:57:39.548895: I tensorflow/compiler/xla/service/service.cc:158]   StreamExecutor device (0): <undefined>, <undefined>
+2019-05-31 11:57:39.557929: E tensorflow/stream_executor/cuda/cuda_driver.cc:300] failed call to cuInit: CUDA_ERROR_UNKNOWN: unknown error
+2019-05-31 11:57:39.558006: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:161] retrieving CUDA diagnostic information for host: gpu-017
+2019-05-31 11:57:39.558031: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:168] hostname: gpu-017
+2019-05-31 11:57:39.558133: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:192] libcuda reported version is: 410.79.0
+2019-05-31 11:57:39.558189: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:196] kernel reported version is: 410.79.0
+2019-05-31 11:57:39.558203: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:303] kernel version seems to match DSO: 410.79.0
