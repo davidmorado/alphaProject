@@ -1,4 +1,5 @@
 import keras
+import tensorflow as tf
 
 def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr):
 
