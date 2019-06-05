@@ -56,7 +56,7 @@ for n_keys_per_class in keys_per_class_grid:
         bandwidth=bandwidth)
     results = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
     
-    filename = "results_test/CNN_" + str(n_keys_per_class) + "_keys.pkl"
+    filename = "../results/results1/CNN_" + str(n_keys_per_class) + "_keys.pkl"
     
     with open(filename, 'wb') as f:
       pickle.dump(results, f)

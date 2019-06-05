@@ -17,8 +17,10 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
             validation_data=(x_test, y_test), 
             callbacks = [tbCallBack])
 
-    memory = model.layers[-1].get_memory()
-    memory = tf.Session().run(memory)
+    # get varkeys in the final layers
+    #memory = model.layers[-1].get_memory()
+    #memory = tf.Session().run(memory)
+    memory = model.get_weights()
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']
