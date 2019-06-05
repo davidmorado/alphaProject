@@ -29,6 +29,10 @@ class Varkeys(Layer):
         super(Varkeys, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
+        print(self.keys.shape)
+        print(x.shape)
+        print(tf.transpose(self.kernel(self.keys, x)).shape)
+        print(self.values.shape)
         KV =  tf.matmul(tf.transpose(self.kernel(self.keys, x)), V)
         KV_ = tf.diag(tf.reshape(tf.reciprocal( tf.matmul(KV,tf.ones((self.categories,1)))) , [-1]))
         output = tf.matmul(KV_, KV)
