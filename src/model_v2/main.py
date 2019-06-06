@@ -28,11 +28,12 @@ lr = 0.0001
 # bandwidth parameter for kernel regression
 bandwidth = 10000
 # number of epochs to train the network for
-epochs = 100
+epochs = 500
 # Determines how many keys there are per target category (n_categories).
 # This should be varied in this script to evaluate the effect of memory 
 # size on network performance.
 keys_per_class_grid = range(10, 1001, 10)
+keys_per_class_grid = 20
 # Training percentage (change to check if code even runs)
 p = 1.0
 #p = 0.1

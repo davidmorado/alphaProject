@@ -23,8 +23,7 @@ class Varkeys(Layer):
                                       shape=(self.dict_size, self.keysize),
                                       initializer=self.initializer,
                                       trainable=True)
-        
-        super(Varkeys, self).build(input_shape)  # Be sure to call this at the end
+        super(Varkeys, self).build(input_shape)
 
     def call(self, x):
         # switch out with KNN if you want!

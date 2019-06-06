@@ -1,0 +1,32 @@
+# paths should be relative to the git path
+# config should contain the following things:
+#
+#  - name: the job-name
+#  - env : the conda environment
+#  - script_path: location of the script to be executed
+#  - script_config: arguments with which to run the script
+#  - slurm_config: SBATCH key-value pairs
+
+# Parallelization
+# The job_builder creates a job for each possible combination of list elements.
+# if you want to provide list-like data, which is should not iterate on, use tuples!
+
+
+name: grid
+env: ADDA
+script: testit.py
+workers: 10
+data: adaboost
+model: GreedySearch
+model_cfg:
+#  metric: [jaccard, hpsim]
+#  skip:   [0, 1, 2, 3]
+#  link:   [single, complete, average, weighted, centroid, median, ward]
+  kshots: 10
+
+slurm_config:
+  partition: CPU
+  ntasks: 1
+  mail-type: FAIL
+  cpus-per-task: 10
+
