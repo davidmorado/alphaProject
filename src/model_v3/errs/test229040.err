@@ -1,0 +1,2 @@
+/home/schestag/miniconda3/envs/test/bin/python: can't open file 'model_v3/main.py': [Errno 2] No such file or directory
+srun: error: gpu-003: task 0: Exited with exit code 2
