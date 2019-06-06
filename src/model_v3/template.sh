@@ -12,4 +12,4 @@
 source activate test
 
 ## Run the script
-srun python model_v3/main.py $0 $1 $2 $3 $4
+srun python main.py $0 $1 $2 $3 $4
