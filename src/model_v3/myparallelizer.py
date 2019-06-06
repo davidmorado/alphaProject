@@ -36,4 +36,5 @@ for lr in lrs:
 		for kpc in kpcs:
 			for es in ess:
 				for tp in tps:
-					os.system(F"sbatch template.sh {lr} {bw} {kpc} {es} {tp}")
+					#print(F"sbatch template.sh {lr} {bw} {kpc} {es} {tp}")
+					os.system(F"sbatch template.sh '{lr}' '{bw}' '{kpc}' '{es}' '{tp}'")
