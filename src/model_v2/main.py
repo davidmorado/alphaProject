@@ -33,7 +33,7 @@ epochs = 500
 # This should be varied in this script to evaluate the effect of memory 
 # size on network performance.
 keys_per_class_grid = range(10, 1001, 10)
-keys_per_class_grid = 20
+keys_per_class_grid = [20]
 # Training percentage (change to check if code even runs)
 p = 1.0
 #p = 0.1

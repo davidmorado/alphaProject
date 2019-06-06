@@ -23,8 +23,7 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
     # get varkeys in the final layers
     #memory = model.layers[-1].get_memory()
     #memory = tf.Session().run(memory)
-    #memory = model.get_weights()
-    memory = 0
+    memory = model.get_weights()[-1]
     
     val_acc = history.history['val_acc']
     acc = history.history['acc']

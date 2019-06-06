@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=CNN_VK_grid
+#SBATCH --output=logs/test%j.log
+#SBATCH --error=errs/test%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=schestag@uni-hildesheim.de
+
+
+# ## FOR GPU USE:
+#SBATCH --partition=STUD
+#SBATCH --gres=gpu:1
+source activate test
+
+## Run the script
+srun python model_v3/main.py $0 $1 $2 $3 $4

@@ -15,4 +15,4 @@ source activate test
 # #SBATCH --export=NONE
 #source /home/schestag/miniconda3/bin/activate test
 #srun /home/schestag/miniconda3/envs/test/bin/python test.py
-srun python CNN+Varkeys+Keras.py
+srun python model_v3/main.py $0 $1 $2 $3 $4
