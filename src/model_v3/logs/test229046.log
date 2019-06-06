@@ -1,0 +1,4 @@
+0.01 1 100.0 300 0.125
+['main.py', '/var/lib/slurm-llnl/slurmd/job229046/slurm_script', '0.01\xa01', '100.0\xa0300', '0.125']
+/var/lib/slurm-llnl/slurmd/job229046/slurm_script
+<class 'str'>
