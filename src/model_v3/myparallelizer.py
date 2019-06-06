@@ -5,7 +5,7 @@ bws = [1e-2, 1e-1, 1, 1e1, 1e2]
 # number of keys per class
 kpcs = [1, 1e1, 1e2, 1e3]
 # embedding sizes
-ess = [30, 300, 3000]
+ess = [int(3000/1e3), int(3000/1e2), int(3000/1e1)]
 # percentage of training data used
 tps = [1, 0.5, 0.25, 0.125]
 
@@ -16,7 +16,7 @@ bws = [1]
 # number of keys per class
 kpcs = [1e2]
 # embedding sizes
-ess = [300]
+ess = [int(3000/1e2)]
 # percentage of training data used
 tps = [0.125]
 
@@ -36,5 +36,4 @@ for lr in lrs:
 		for kpc in kpcs:
 			for es in ess:
 				for tp in tps:
-					#print(F"sbatch template.sh {lr} {bw} {kpc} {es} {tp}")
-					os.system(F"sbatch template.sh '{lr}' '{bw}' '{kpc}' '{es}' '{tp}'")
+					os.system(F"sbatch template.sh '{lr}' '{bw}' '{kpc}' '{es}' '{tp}'")
