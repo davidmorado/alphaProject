@@ -41,6 +41,9 @@ epochs = 500
     
 # Hyperparameters:
 # learning rate
+print(sys.argv)
+print(sys.argv[1])
+print(type(sys.argv[1]))
 lr = float(sys.argv[1])
 # bandwidth parameter for kernel regression
 bandwidth = float(sys.argv[2])
