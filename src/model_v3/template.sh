@@ -4,7 +4,7 @@
 #SBATCH --error=errs/test%j.err
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=schestag@uni-hildesheim.de
-
+##SBATCH --mail-user=fschesta@mail.sfsu.edu
 
 # ## FOR GPU USE:
 #SBATCH --partition=STUD
