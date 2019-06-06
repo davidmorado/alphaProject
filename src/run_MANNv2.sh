@@ -7,7 +7,7 @@
 
 
 ## FOR GPU USE:
-#SBATCH --partition=GPU
+#SBATCH --partition=STUD
 #SBATCH --gres=gpu:1
 source activate test
 

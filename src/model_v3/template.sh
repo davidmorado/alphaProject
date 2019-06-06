@@ -7,9 +7,9 @@
 #SBATCH --mail-user=fschesta@mail.sfsu.edu
 
 # ## FOR GPU USE:
-#SBATCH --partition=STUD
+#SBATCH --partition=TEST
 #SBATCH --gres=gpu:1
 source activate test
 
 ## Run the script
-srun python main.py $0 $1 $2 $3 $4
+srun python main.py $1 $2 $3 $4 $5 $6
