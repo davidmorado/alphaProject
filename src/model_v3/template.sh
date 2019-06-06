@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=CNN_VK_grid
+#SBATCH --job-name=CNN_VK
 #SBATCH --output=logs/test%j.log
 #SBATCH --error=errs/test%j.err
 #SBATCH --mail-type=ALL

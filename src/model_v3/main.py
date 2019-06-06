@@ -64,11 +64,14 @@ model = CNN_VK(
     embedding_dim=embedding_dim, 
     n_keys_per_class=n_keys_per_class, 
     bandwidth=bandwidth)
-results = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr)
 
-model.save(F'models/lr={lr}_bw={bandwidth}_kpc={n_keys_per_class}_es={embedding_dim}_tp={p}')
+modelpath = F'lr={lr}_bw={bandwidth}_kpc={n_keys_per_class}_es={embedding_dim}_tp={p}'
 
-filename = F"gridresults/lr={lr}_bw={bandwidth}_kpc={n_keys_per_class}_es={embedding_dim}_tp={p}.pkl"
+results = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr, logstring=F'tb_logs/{modelpath}')
+
+model.save(F'models/' + modelpath)
+
+filename = F"gridresults/{modelpath}.pkl"
 
 with open(filename, 'wb') as f:
   pickle.dump(results, f)

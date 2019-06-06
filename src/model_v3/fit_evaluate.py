@@ -1,13 +1,13 @@
 import keras
 import tensorflow as tf
 
-def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr):
+def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr, logstring):
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer = keras.optimizers.rmsprop(lr=lr, decay=1e-6),
                 metrics=['accuracy'])
 
-    tbCallBack = keras.callbacks.TensorBoard(log_dir='tb_logs/', histogram_freq=0,  
+    tbCallBack = keras.callbacks.TensorBoard(log_dir=logstring, histogram_freq=0,  
           write_graph=True, write_images=True)
 
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss',
