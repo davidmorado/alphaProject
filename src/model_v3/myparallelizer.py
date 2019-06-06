@@ -31,9 +31,14 @@ for f in folders:
     except OSError:
         pass
 
-for float(lr) in lrs:
-	for float(bw) in bws:
-		for int(kpc) in kpcs:
-			for int(es) in ess:
+for lr in lrs:
+	lr = float(lr)
+	for bw in bws:
+		bw = float(bw)
+		for kpc in kpcs:
+			kpc = int(kpc)
+			for es in ess:
+				es = int(es)
 				for float(tp) in tps:
+					tp = float(tp)
 					os.system(F"sbatch template.sh {lr} {bw} {kpc} {es} {tp}")
