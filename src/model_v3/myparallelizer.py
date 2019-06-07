@@ -10,7 +10,7 @@ ess = [int(3000/1e3), int(3000/1e2), int(3000/1e1)]
 tps = [1, 0.5, 0.25, 0.125]
 
 ##########
-lrs = [1e-2]
+lrs = [1e-3]
 # bandwith sizes
 bws = [1]
 # number of keys per class

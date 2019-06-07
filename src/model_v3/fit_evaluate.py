@@ -11,14 +11,14 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
           write_graph=True, write_images=True)
 
     early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss',
-        min_delta=1e-3, patience=20, verbose=2, mode='auto', restore_best_weights=True)
+        min_delta=0, patience=20, verbose=2, mode='auto', restore_best_weights=True)
 
     history = model.fit(x_train, y_train,
-            batch_size=  batch_size,
+            batch_size=batch_size,
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test), 
-            callbacks = [tbCallBack])
+            callbacks = [tbCallBack, early_stopping])
 
     # get varkeys in the final layers
     #memory = model.layers[-1].get_memory()

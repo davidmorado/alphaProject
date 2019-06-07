@@ -27,25 +27,27 @@ x_test = x_test/255
 y_train = to_categorical(y_train, num_classes)
 y_test = to_categorical(y_test, num_classes)
 
+########################################################################
+# # DOWNSAMPLING
 # number of target categories
-num_categories = 3
+# num_categories = 3
 
-# use fewer classes in training data 
-x_train, y_train = sample(x_train, y_train, 1, num_categories)
-num_samples = x_train.shape[0]
+# # use fewer classes in training data 
+# x_train, y_train = sample(x_train, y_train, 1, num_categories)
+# num_samples = x_train.shape[0]
 
-# use fewer classes in test data
-x_test, y_test = sample(x_test, y_test, 1, num_categories)
+# # use fewer classes in test data
+# x_test, y_test = sample(x_test, y_test, 1, num_categories)
+########################################################################
 
     
 # Hyperparameters:
 # number of target categories
-num_categories = num_categories
+num_categories = 10
 # batch size to train SGD
 batch_size = 64
 # number of epochs to train the network for
 epochs = 500
-epochs = 100
     
 # Hyperparameters:
 # learning rate
@@ -65,13 +67,11 @@ idx = np.random.choice(num_samples, int(p*num_samples))
 x_train_ = x_train[idx,]
 y_train_ = y_train[idx,]
 
-print("CNN+Keys...")
-print("CNN with " + str(n_keys_per_class) + " keys per class.")
+
 model = CNN_VK(
     num_categories,
     input_shape=input_shape, 
     layers=[32, 64, 512], 
-    #num_categories=num_categories, 
     embedding_dim=embedding_dim, 
     n_keys_per_class=n_keys_per_class, 
     bandwidth=bandwidth)
