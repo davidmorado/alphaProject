@@ -18,7 +18,7 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
             epochs=epochs,
             verbose=1,
             validation_data=(x_test, y_test), 
-            callbacks = [tbCallBack, early_stopping])
+            callbacks = [tbCallBack])
 
     # get varkeys in the final layers
     #memory = model.layers[-1].get_memory()

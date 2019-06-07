@@ -38,6 +38,7 @@ num_categories = 10
 batch_size = 64
 # number of epochs to train the network for
 epochs = 500
+epochs = 100
     
 # Hyperparameters:
 # learning rate
