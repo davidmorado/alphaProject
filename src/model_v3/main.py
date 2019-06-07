@@ -30,9 +30,13 @@ y_test = to_categorical(y_test, num_classes)
 # number of target categories
 num_categories = 3
 
+# use fewer classes in training data 
 x_train, y_train = sample(x_train, y_train, 1, num_categories)
-num_classes = np.max(y_test)+1
 num_samples = x_train.shape[0]
+
+# use fewer classes in test data
+x_test, y_test = sample(x_test, y_test, 1, num_categories)
+
     
 # Hyperparameters:
 # number of target categories
