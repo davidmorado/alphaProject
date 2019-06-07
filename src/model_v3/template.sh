@@ -7,7 +7,7 @@
 #SBATCH --mail-user=fschesta@mail.sfsu.edu
 
 # ## FOR GPU USE:
-#SBATCH --partition=TEST
+#SBATCH --partition=STUD
 #SBATCH --gres=gpu:1
 source activate test
 
