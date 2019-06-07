@@ -27,13 +27,16 @@ x_test = x_test/255
 y_train = to_categorical(y_train, num_classes)
 y_test = to_categorical(y_test, num_classes)
 
-x_train, y_train = sample(x_train, y_train, 1, 3)
+# number of target categories
+num_categories = 3
+
+x_train, y_train = sample(x_train, y_train, 1, num_categories)
 num_classes = np.max(y_test)+1
 num_samples = x_train.shape[0]
     
 # Hyperparameters:
 # number of target categories
-num_categories = 10
+num_categories = num_categories
 # batch size to train SGD
 batch_size = 64
 # number of epochs to train the network for
