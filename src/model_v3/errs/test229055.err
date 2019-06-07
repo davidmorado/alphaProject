@@ -1,0 +1,6 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "main.py", line 56, in <module>
+    idx = np.random.choice(num_samples, int(p*num_samples))
+ValueError: invalid literal for int() with base 10: '0.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.1250.12
+srun: error: gpu-000: task 0: Exited with exit code 1

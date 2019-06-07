@@ -18,7 +18,7 @@ kpcs = [1e2]
 # embedding sizes
 ess = [int(3000/1e2)]
 # percentage of training data used
-tps = [0.125]
+tps = [0.5]
 
 
 import os
@@ -39,6 +39,6 @@ for lr in lrs:
 			kpc = int(kpc)
 			for es in ess:
 				es = int(es)
-				for float(tp) in tps:
+				for tp in tps:
 					tp = float(tp)
 					os.system(F"sbatch template.sh {lr} {bw} {kpc} {es} {tp}")

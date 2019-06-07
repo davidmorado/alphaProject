@@ -1,0 +1,29 @@
+2019-06-07 01:55:02.559170: I tensorflow/core/platform/cpu_feature_guard.cc:141] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX
+2019-06-07 01:55:02.860446: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1432] Found device 0 with properties: 
+name: Tesla K80 major: 3 minor: 7 memoryClockRate(GHz): 0.8235
+pciBusID: 0000:86:00.0
+totalMemory: 11.17GiB freeMemory: 11.10GiB
+2019-06-07 01:55:02.860487: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1511] Adding visible gpu devices: 0
+2019-06-07 01:55:08.280205: I tensorflow/core/common_runtime/gpu/gpu_device.cc:982] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-06-07 01:55:08.280264: I tensorflow/core/common_runtime/gpu/gpu_device.cc:988]      0 
+2019-06-07 01:55:08.280277: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1001] 0:   N 
+2019-06-07 01:55:08.280723: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1115] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10758 MB memory) -> physical GPU (device: 0, name: Tesla K80, pci bus id: 0000:86:00.0, compute capability: 3.7)
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "main.py", line 75, in <module>
+    model.save(F'models/' + modelpath)
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/keras/engine/network.py", line 1090, in save
+    save_model(self, filepath, overwrite, include_optimizer)
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/keras/engine/saving.py", line 379, in save_model
+    f = h5dict(filepath, mode='w')
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/keras/utils/io_utils.py", line 186, in __init__
+    self.data = h5py.File(path, mode=mode)
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/h5py/_hl/files.py", line 394, in __init__
+    swmr=swmr)
+  File "/home/schestag/miniconda3/envs/test/lib/python3.6/site-packages/h5py/_hl/files.py", line 176, in make_fid
+    fid = h5f.create(name, h5f.ACC_TRUNC, fapl=fapl, fcpl=fcpl)
+  File "h5py/_objects.pyx", line 54, in h5py._objects.with_phil.wrapper
+  File "h5py/_objects.pyx", line 55, in h5py._objects.with_phil.wrapper
+  File "h5py/h5f.pyx", line 105, in h5py.h5f.create
+OSError: Unable to create file (unable to lock file, errno = 37, error message = 'No locks available')
+srun: error: gpu-000: task 0: Exited with exit code 1
