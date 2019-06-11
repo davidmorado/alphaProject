@@ -6,20 +6,22 @@ bws = [1e-2, 1e-1, 1, 1e1, 1e2]
 # number of keys per class
 kpcs = [1, 1e1, 1e2, 1e3]
 # embedding sizes
-#ess = [int(3000/1e3), int(3000/1e2), int(3000/1e1)]
-ess = [int(3000/1e0)]
+ess = [int(3000/1e3), int(3000/1e2), int(3000/1e1)]
 # percentage of training data used
 tps = [1, 0.5, 0.25, 0.125]
 
 ##########
-# bandwith sizes
-# bws = [10000]
-# number of keys per class
-# kpcs = [1e2]
-# embedding sizes
-# ess = [int(3000/1e2)]
-# percentage of training data used
-# tps = [0.5]
+# TEST MODE
+testing = True
+if testing:
+	# bandwith sizes
+	bws = [10000]
+	# number of keys per class
+	kpcs = [1e2]
+	# embedding sizes
+	ess = [int(3000/1e1)]
+	# percentage of training data used
+	tps = [0.125]
 
 
 import os
