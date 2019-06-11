@@ -1,0 +1,6 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "main.py", line 59, in <module>
+    modelpath = F"Adadelta_es={n_keys_per_class}_tp={hp_dict['train_percentage']}"
+NameError: name 'n_keys_per_class' is not defined
+srun: error: gpu-000: task 0: Exited with exit code 1
