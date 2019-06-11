@@ -4,9 +4,8 @@ from keras.datasets import cifar10
 from keras.utils import to_categorical
 from CNN_VK import CNN_VK
 from fit_evaluate import fit_evaluate
-import sys  
+import sys
 import os
-from sample import sample
 
 # creates folders
 folders = ['models', 'gridresults', 'tb_logs', 'errs', 'logs']
@@ -16,7 +15,7 @@ for f in folders:
     except OSError:
         pass
 
-# Data Loading and Preprocessing 
+# Data Loading and Preprocessing
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 input_shape = x_train.shape[1:]
 num_classes = np.max(y_test)+1
@@ -27,20 +26,6 @@ x_test = x_test/255
 y_train = to_categorical(y_train, num_classes)
 y_test = to_categorical(y_test, num_classes)
 
-########################################################################
-# # DOWNSAMPLING
-# number of target categories
-# num_categories = 3
-
-# # use fewer classes in training data 
-# x_train, y_train = sample(x_train, y_train, 1, num_categories)
-# num_samples = x_train.shape[0]
-
-# # use fewer classes in test data
-# x_test, y_test = sample(x_test, y_test, 1, num_categories)
-########################################################################
-
-    
 # Hyperparameters:
 # number of target categories
 num_categories = 10
@@ -78,7 +63,7 @@ model = CNN_VK(
     n_keys_per_class=n_keys_per_class, 
     bandwidth=bandwidth)
 
-modelpath = F'Adadelta_bw={hp_dict['bandwidth']}_kpc={hp_dict['n_keys_per_class']}_es={n_keys_per_class}_tp={hp_dict['train_percentage']}'
+modelpath = F"Adadelta_bw={hp_dict['bandwidth']}_kpc={hp_dict['n_keys_per_class']}_es={n_keys_per_class}_tp={hp_dict['train_percentage']}"
 
 metrics_dict, memory = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, logstring=F'tb_logs/{modelpath}')
 

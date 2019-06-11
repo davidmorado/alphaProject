@@ -6,7 +6,7 @@
 #SBATCH --mail-user=schestag@uni-hildesheim.de
 
 # ## FOR GPU USE:
-#SBATCH --partition=STUD
+#SBATCH --partition=TEST
 #SBATCH --gres=gpu:1
 source activate test
 
