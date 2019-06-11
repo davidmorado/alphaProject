@@ -68,7 +68,7 @@ modelpath = F"Adadelta_bw={hp_dict['bandwidth']}_kpc={hp_dict['n_keys_per_class'
 metrics_dict, memory = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, logstring=F'tb_logs/{modelpath}')
 
 # causes OSError: Unable to create file (unable to lock file, errno = 37, error message = 'No locks available')
-model.save(F'models/' + modelpath)
+# model.save(F'models/' + modelpath)
 
 out_results = (hp_dict, metrics_dict, memory)
 filename = F"gridresults/{modelpath}.pkl"
