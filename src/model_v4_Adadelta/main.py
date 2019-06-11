@@ -6,7 +6,6 @@ from CNN_VK import CNN_VK
 from fit_evaluate import fit_evaluate
 import sys  
 import os
-from sample import sample
 
 # creates folders
 folders = ['models', 'gridresults', 'tb_logs', 'errs', 'logs']
