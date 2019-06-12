@@ -15,7 +15,7 @@ tps = [1, 0.5, 0.25, 0.125]
 ##########
 # TEST MODE
 # don't forget to set partition=TEST in template.sh
-testing = True
+testing = False
 if testing:
 	# embedding sizes
 	ess = [300]
