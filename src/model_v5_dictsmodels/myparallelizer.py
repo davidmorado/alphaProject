@@ -6,7 +6,7 @@ bws = [1e-2, 1e-1, 1, 1e1, 1e2]
 # number of keys per class
 kpcs = [1, 1e1, 1e2, 1e3]
 # embedding sizes
-ess = [300, 100, 30]
+ess = [300, 100, 30, 10]
 # percentage of training data used
 tps = [1, 0.5, 0.25, 0.125]
 
