@@ -1,6 +1,0 @@
-Using TensorFlow backend.
-Traceback (most recent call last):
-  File "main.py", line 8, in <module>
-    import o
-ModuleNotFoundError: No module named 'o'
-srun: error: gpu-000: task 0: Exited with exit code 1

@@ -1,5 +1,0 @@
-  File "main.py", line 71
-    metrics_dict, memory = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr=learning_rate logstring=F'tb_logs/{modelpath}')
-                                                                                                                                ^
-SyntaxError: invalid syntax
-srun: error: gpu-000: task 0: Exited with exit code 1
