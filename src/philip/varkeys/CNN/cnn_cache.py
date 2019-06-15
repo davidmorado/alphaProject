@@ -153,7 +153,7 @@ class Varkeys(Layer):
         row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
         row_norms_B = tf.reshape(row_norms_B, [1, -1])  # Row vector.
 
-        return row_norms_A - 2 * tf.matmul(A, tf.transpose(B)) + row_norms_B
+        return row_norms_A - 2 * tf.matmul(A, tf.transpose(B)) + row_norms_B # binomische formel
 
     def kernel (self, A,B):
         print('im in kernel function!!')
