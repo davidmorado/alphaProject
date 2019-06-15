@@ -11,4 +11,4 @@
 source activate test
 
 ## Run the script
-srun python main.py $1 $2 $3 $4 $5
+srun python main.py $1 $2 $3 $4 $5 $6

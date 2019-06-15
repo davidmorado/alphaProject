@@ -23,7 +23,7 @@ if testing:
 	# percentage of training data used
 	tps = [0.125]
 	# learning rate
-	lr = [0.0001]
+	lrs = [0.0001]
 
 
 import os
@@ -44,6 +44,6 @@ for bw in bws:
 			es = int(es)
 			for tp in tps:
 				tp = float(tp)
-				for lr in lrs
+				for lr in lrs:
 					lr = float(lr)
 					os.system(F"sbatch template.sh {bw} {kpc} {es} {tp} {lr}")
