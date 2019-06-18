@@ -68,7 +68,7 @@ model = CNN_VK(
 
 modelpath = F"Adadelta_bw={hp_dict['bandwidth']}_kpc={hp_dict['n_keys_per_class']}_es={hp_dict['embedding_dim']}_tp={hp_dict['train_percentage']}"
 
-metrics_dict, memory = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr=learning_rate logstring=F'tb_logs/{modelpath}')
+metrics_dict, memory = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr=learning_rate, logstring=F'tb_logs/{modelpath}')
 
 # causes OSError: Unable to create file (unable to lock file, errno = 37, error message = 'No locks available')
 # model.save(F'models/' + modelpath)
