@@ -25,7 +25,7 @@ if testing:
 	# learning rate
 	lrs = [0.0001]
 
-
+# 10 1000 300 0.01 0.0001
 import os
 
 # creates folders
