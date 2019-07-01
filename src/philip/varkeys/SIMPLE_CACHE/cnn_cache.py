@@ -147,6 +147,8 @@ def CNN(layers=[32, 64, 512], embedding_dim = 20, num_classes=10):
 
 model = CNN(embedding_dim = KEY_SIZE, num_classes=NUM_CLASSES)
 
+print(model.summary())
+sys.exit(0)
 
 model.compile(loss=keras.losses.categorical_crossentropy,
             # optimizer=keras.optimizers.SGD(lr=0.1),
