@@ -10,7 +10,7 @@ data_frac = [1, 0.5, 0.25]
 ##########
 # TEST MODE
 # don't forget to set partition=TEST in template.sh
-testing = False
+testing = True
 if testing:
 	# embedding sizes
 	ess = [300]
@@ -32,4 +32,8 @@ for es in ess:
 	es = int(es)
 	for tp in tps:
 		tp = float(tp)
-		os.system(F"sbatch template.sh {es} {tp}")
+		for lr in lrs:
+			lr = float(lr)
+			for df in data_frac:
+				df = float(df)
+				os.system(F"sbatch template.sh {es} {tp} {lr} {df}")

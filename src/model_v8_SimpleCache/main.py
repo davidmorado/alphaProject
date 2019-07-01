@@ -32,7 +32,7 @@ num_categories = 10
 # batch size to train SGD
 batch_size = 64
 # number of epochs to train the network for
-epochs = 1
+epochs = 500
 
 # Hyperparameters:
 hp_dict = {
@@ -62,14 +62,19 @@ model = CNN(
     layers=[32, 64, 512], 
     embedding_dim=embedding_dim)
 
-modelpath = F"Adam_es={embedding_dim}_tp={train_percentage}_df={data_frac}"
+modelpath = F"Adam_es={embedding_dim}_tp={train_percentage}_df={data_frac}_lr={learning_rate}"
 
 metrics_dict, key = fit_evaluate(model, x_train_, y_train_, x_test, y_test, batch_size, epochs, lr=learning_rate, logstring=F'tb_logs/{modelpath}', data_frac=data_frac)
+
+print('eval in main')
+mem_loss, mem_accuracy = model.evaluate(x_test, y_test, verbose=1)
+print('model loss:', mem_loss)
+print('model accuracy:', mem_accuracy)
 
 # causes OSError: Unable to create file (unable to lock file, errno = 37, error message = 'No locks available')
 # model.save(F'models/' + modelpath)
 
-out_results = (hp_dict, metrics_dict, key)
+out_results = (hp_dict, metrics_dict, key, model)
 filename = F"gridresults/{modelpath}.pkl"
 with open(filename, 'wb') as f:
   pickle.dump(out_results, f)

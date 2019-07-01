@@ -4,6 +4,8 @@ import tensorflow as tf
 import numpy as np
 
 def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr, logstring, data_frac=1):
+    
+    
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer = keras.optimizers.Adam(
@@ -25,8 +27,8 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
 
     # SIMPLE CACHE
     num_classes = 10
-    #mem_layers = [14, 17, 20]
-    mem_layers = [17]
+    mem_layers = [14, 17, 20]
+    #mem_layers = [17]
     output_list = []
     for i in range(len(mem_layers)):
         output_list.append(model.layers[mem_layers[i]].output)
@@ -41,9 +43,15 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
 
     memkeys_list = mem.predict(x_train)
 
+
+    if len(mem_layers) == 1:
+        memkeys_list = memkeys_list[None,:]
+
+    #print(memkeys_list)
     # print('memkeys_list shape: ', memkeys_list.shape) # (100, 10)
+    #print('memkeys_list: ', memkeys_list, (x_train.shape[0],-1))
     mem_keys = np.reshape(memkeys_list[0],(x_train.shape[0],-1))
-    #mem_keys = memkeys_list.reshape((x_train.shape[0],-1))
+
     for i in range(len(mem_layers)-1):
         mem_keys = np.concatenate((mem_keys, np.reshape(memkeys_list[i+1],(x_train.shape[0],-1))),axis=1)
 
@@ -52,6 +60,8 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
 
     # Pass items thru memory
     testmem_list = mem.predict(x_test)
+    if len(mem_layers) == 1:
+        testmem_list = testmem_list[None,:]
     test_mem = np.reshape(testmem_list[0],(x_test.shape[0],-1))
     for i in range(len(mem_layers)-1):
         test_mem = np.concatenate((test_mem, np.reshape(testmem_list[i+1],(x_test.shape[0],-1))),axis=1)
