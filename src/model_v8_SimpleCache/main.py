@@ -74,7 +74,7 @@ print('model accuracy:', mem_accuracy)
 # causes OSError: Unable to create file (unable to lock file, errno = 37, error message = 'No locks available')
 # model.save(F'models/' + modelpath)
 
-out_results = (hp_dict, metrics_dict, key, model)
+out_results = (hp_dict, metrics_dict, key)
 filename = F"gridresults/{modelpath}.pkl"
 with open(filename, 'wb') as f:
   pickle.dump(out_results, f)
