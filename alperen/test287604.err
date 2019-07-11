@@ -1,0 +1,6 @@
+/var/lib/slurm-llnl/slurmd/job287604/slurm_script: line 13: activate: No such file or directory
+Traceback (most recent call last):
+  File "CNN+Varkeys+Keras_alperen.py", line 2, in <module>
+    import keras
+ModuleNotFoundError: No module named 'keras'
+srun: error: gpu-003: task 0: Exited with exit code 1
