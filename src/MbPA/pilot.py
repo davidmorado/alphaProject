@@ -31,7 +31,7 @@ tf.reset_default_graph()
 
 # Inputs
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
-y =  tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
+y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
 
 
@@ -56,7 +56,7 @@ correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
 
-def train_neural_network(session, optimizer, feature_batch, label_batch):
+def training_step(session, optimizer, feature_batch, label_batch):
     _, embeddings_ = session.run([optimizer, embeddings],
                 feed_dict={
                     x: feature_batch,
@@ -88,8 +88,8 @@ with tf.Session() as sess:
         n_batches = 5
         for batch_i in range(1, n_batches + 1):
             for batch_features, batch_labels in load_preprocess_training_batch(batch_i, batch_size):
-                hs = train_neural_network(sess, optimizer, keep_probability, batch_features, batch_labels)
-                M.write(hs)
+                hs = training_step(sess, optimizer, keep_probability, batch_features, batch_labels)
+                M.write(hs, batch_labels)
                 
             print('Epoch {:>2}, CIFAR-10 Batch {}:  '.format(epoch + 1, batch_i), end='')
             print_stats(sess, batch_features, batch_labels, cost, accuracy)
