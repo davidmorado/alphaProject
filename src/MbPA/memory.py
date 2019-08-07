@@ -94,7 +94,7 @@ class Memory():
             )
 
     	# negate distances to get the k closest keys
-    	# indices: [K x batchsize] 
+    	# indices: [batchsize x K] 
         _, indices = tf.nn.top_k(-distances, k=self.K)
 
         # lookup
