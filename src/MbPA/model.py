@@ -56,13 +56,15 @@ def conv_net(x, embedding_size=50):
 
 
 def secondStage(h, embedding_size=50):
-    full1 = tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(embedding_size/2), activation_fn=tf.nn.relu)
+    full1 = tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(embedding_size/2), activation_fn=tf.nn.relu, scope='SECOND_STAGE')
     full1 = tf.layers.batch_normalization(full1)
-
-    full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/4), activation_fn=tf.nn.relu)
+    full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/4), activation_fn=tf.nn.relu, scope='SECOND_STAGE')
     full2 = tf.layers.batch_normalization(full2)
-
-    logits = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/6), activation_fn=None)
+    logits = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/6), activation_fn=None, scope='SECOND_STAGE')
     return logits
 
 
+tmp_weights = full1.weights 
+full1.weights = tmp_weights + adaptation
+do prediction
+full1.weights = tmp_weights

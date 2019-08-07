@@ -41,14 +41,16 @@ batch_size = 128
 learning_rate = 0.001
 
 
-M = Memory()
+M = Memory(secondStage)
 embeddings = conv_net(x)
-logits = secondStage(embeddings)
+logits = M.model(embeddings)
 
 
 
 # Loss and Optimizer
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y))
+#cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y))
+cost = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=y))
+
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Accuracy
@@ -56,19 +58,19 @@ correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
 
-def training_step(session, optimizer, feature_batch, label_batch):
-    _, embeddings_ = session.run([optimizer, embeddings],
+def training_step(session, optimizer, batch_features, batch_labels):
+    _, h = session.run([optimizer, embeddings],
                 feed_dict={
-                    x: feature_batch,
-                    y: label_batch
+                    x: batch_features,
+                    y: batch_labels
                 })
-    return embeddings_
+    return h
 
-def print_stats(session, feature_batch, label_batch, cost, accuracy):
+def print_stats(session, batch_features, batch_labels, cost, accuracy):
     loss = sess.run(cost, 
                     feed_dict={
-                        x: feature_batch,
-                        y: label_batch
+                        x: batch_features,
+                        y: batch_labels
                     })
     valid_acc = sess.run(accuracy, 
                          feed_dict={
@@ -88,7 +90,7 @@ with tf.Session() as sess:
         n_batches = 5
         for batch_i in range(1, n_batches + 1):
             for batch_features, batch_labels in load_preprocess_training_batch(batch_i, batch_size):
-                hs = training_step(sess, optimizer, keep_probability, batch_features, batch_labels)
+                _, hs = training_step(sess, optimizer, keep_probability, batch_features, batch_labels)
                 M.write(hs, batch_labels)
                 
             print('Epoch {:>2}, CIFAR-10 Batch {}:  '.format(epoch + 1, batch_i), end='')
