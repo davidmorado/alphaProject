@@ -94,38 +94,43 @@ class Memory():
             )
 
     	# negate distances to get the k closest keys
-    	# indices: [batchsize x K] 
+    	# indices: [querybatchsize x K] 
         _, indices = tf.nn.top_k(-distances, k=self.K)
 
-        # lookup
+        # lookup of 
         # hit_keys: [K x embeddingsize]
         # hit_values: [K x targetsize]
         hit_keys = tf.nn.embedding_lookup(self.Keys, indices)
         hit_values = tf.nn.embedding_lookup(self.Values, indices)
 
         weights = self.kernel(hit_keys, h)
+
         return hit_keys, hit_values, weights
 
-    
     def sq_distance(self, A, B):
-    	# A = hit_keys: [K x embeddingsize]
-    	# B = h: [batchsize x embeddingsize]
-    	# computes ||A||^2 - 2*||AB|| + ||B||^2 = A.TA - 2 A.T B + B.T B
-        row_norms_A = tf.reduce_sum(tf.square(A), axis=1) # shape (K)
-        row_norms_A = tf.reshape(row_norms_A, [-1, 1])  # shape (K x 1)
-
-        row_norms_B = tf.reduce_sum(tf.square(B), axis=1) # shape (batchsize)
-        row_norms_B = tf.reshape(row_norms_B, [1, -1])  # shape (batchsize x 1)
-
-        AB = tf.matmul(A, tf.transpose(B)) # shape (K x batchsize)
-
-        return row_norms_A - 2 * AB + row_norms_B
-
+        # A = hit_keys: [batchsize x K x embeddingsize]
+        # B = h: [batchsize x embeddingsize]
+        # computes ||A||^2 - 2*||AB|| + ||B||^2 = A.TA - 2 A.T B + B.T B
+        row_norms_A = tf.reduce_sum(tf.square(A), axis=2) 
+        row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
+        row_norms_B = tf.reshape(row_normsB, [-1, 1])
+        # B: [batchsize x embeddingsize x 1]
+        B = tf.expanddims(B, axis=2)
+        # B: [batchsize x embeddingsize x K]
+        B = tf.tile(B, [1, 1, self.K])
+        # https://stackoverflow.com/questions/38235555/tensorflow-matmul-of-input-matrix-with-batch-data
+        # AB = [batchsize x K x embeddingsize] @ [batchsize x embeddingsize x K] 
+        # -> [batchsize x K x K] (duplicated on axis 2)
+        AB = tf.matmul(A, B) 
+        # AB -> [batchsize x K]
+        AB = AB[:,:,0] # last dim is just duplacates
+        result = row_norms_A - 2 * AB + row_norms_B
+        return result
 
     def kernel (self, A,B):
     	#	1/(e + tf.square(hit_keys - h))
         distances = self.sq_distance(A,B)
-        weights = tf.reciprocal(distances+1e-4)
+        weights = tf.reciprocal(distances+tf.constant(1e-4))
         return weights # weight matrix: [K x batchsize]
 
     def adaptation(self, h,  niters):
@@ -144,7 +149,7 @@ class Memory():
         gradients = optimizer.compute_gradients(error, var_list=weights_to_adapt)
 
 
-
+########################################################################################################
 encode_vars = tf.get_collection(
             tf.GraphKeys.TRAINABLE_VARIABLES, '{}/encode'.format(scope)
             )
