@@ -1,4 +1,4 @@
-import tensorflow
+import tensorflow as tf
 
 from model import conv_net, secondStage
 from memory import Memory
@@ -35,12 +35,15 @@ y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
 
 
-epochs = 10
-batch_size = 128
+epochs = 5
+batch_size = 32
 learning_rate = 0.001
 
 
 M = Memory(secondStage)
+
+import sys
+sys.exit(0)
 embeddings = conv_net(x)
 logits = M.model(embeddings)
 
@@ -94,5 +97,27 @@ with tf.Session() as sess:
                 
             print('Epoch {:>2}, CIFAR-10 Batch {}:  '.format(epoch + 1, batch_i), end='')
             print_stats(sess, batch_features, batch_labels, cost, accuracy)
+
+def predict(x_):
+    # x_: [batchsize x 32 x 32 x 3]
+    x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
+    embeddings = conv_net(x)
+    yhats = M.predict(embeddings)
+    with tf.Session() as sess:
+        return sess.run(yhats, feed_dict={x:x_})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

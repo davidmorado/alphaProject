@@ -64,7 +64,9 @@ def secondStage(h, embedding_size=50):
     return logits
 
 
-tmp_weights = full1.weights 
-full1.weights = tmp_weights + adaptation
-do prediction
-full1.weights = tmp_weights
+# tmp_weights = full1.weights 
+# full1.weights = tmp_weights + adaptation
+# # do prediction
+# full1.weights = tmp_weights
+
+

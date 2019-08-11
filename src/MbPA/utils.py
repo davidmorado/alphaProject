@@ -1,6 +1,6 @@
 
 
-def in_train_phase(x, alt, training=None):
+def in_train_phase(x, alt, training):
   """Selects `x` in train phase, and `alt` otherwise.
   Note that `alt` should have the *same shape* as `x`.
   Arguments:

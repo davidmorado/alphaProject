@@ -1,5 +1,5 @@
 import tensorflow as tf 
-
+from utils import in_train_phase
 
 
 
@@ -7,15 +7,15 @@ import tensorflow as tf
 
 class Memory():
 
-    def __init__(self, model, embeddingsize=50, batch_size=128, capacity_multiplier=10, target_size=10):
+    def __init__(self, model, embeddingsize=50, batch_size=128, capacity_multiplier=10, target_size=10, K=20):
         self.batch_size = batch_size
         self.capacity = batch_size * capacity_multiplier
         self.embeddingsize = embeddingsize
         self.target_size = target_size
-        self.Keys   = tf.Variable(tf.zeros(self.capacity, self.embeddingsize), name='KEYS')
-        self.Values = tf.Variable(tf.zeros(self.capacity, self.target_size), name='VALUES')
-        self.K = 50
-        self.pointer = 0
+        self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embeddingsize], dtype=tf.float32), dtype=tf.float32,  name='KEYS')
+        self.Values = tf.Variable(tf.zeros([self.capacity, self.target_size], dtype=tf.float32), dtype=tf.float32, name='VALUES')
+        self.K = tf.constant(K)
+        self.pointer = tf.Variable(0)
         self.train_mode = True
         self.model = model
 
@@ -26,37 +26,6 @@ class Memory():
 
     def eval(self):
         self.train_mode = False
-
-
-    def in_train_phase(x, alt, training=None):
-        """Selects `x` in train phase, and `alt` otherwise.
-        Note that `alt` should have the *same shape* as `x`.
-        Arguments:
-            x: What to return in train phase
-                (tensor or callable that returns a tensor).
-            alt: What to return otherwise
-                (tensor or callable that returns a tensor).
-            training: Optional scalar tensor
-                (or Python boolean, or Python integer)
-                specifying the learning phase.
-        Returns:
-            Either `x` or `alt` based on the `training` flag.
-            the `training` flag defaults to `K.learning_phase()`.
-        """
-        #   if training is None:
-        #     training = learning_phase()
-
-        if training == 1 or training is True:
-            if callable(x):
-            return x()
-            else:
-            return x
-
-        elif training == 0 or training is False:
-            if callable(alt):
-            return alt()
-            else:
-            return alt    
 
 
     def write(h, values):
@@ -75,26 +44,26 @@ class Memory():
 
     def read(self, h):
 
-    	# keys: [capacity x embeddingsize] -> [1 x capacity x embeddingsize]
-    	expanded_keys = tf.expand_dims(self.Keys, axis=0) 
+        # keys: [capacity x embeddingsize] -> [1 x capacity x embeddingsize]
+        expanded_keys = tf.expand_dims(self.Keys, axis=0) 
 
-    	# h: [batchsize x embeddingsize] -> [batchsize x 1 x embeddingsize]
-    	expanded_h = tf.expand_dims(h, axis=1)
+        # h: [batchsize x embeddingsize] -> [batchsize x 1 x embeddingsize]
+        expanded_h = tf.expand_dims(h, axis=1)
 
-    	# h: [batchsize x 1 x embeddingsize] -> [batchsize x capacity x embeddingsize]
-    	tiled_eh = tf.tile(expanded_h, [1, self.capacity, 1])
+        # h: [batchsize x 1 x embeddingsize] -> [batchsize x capacity x embeddingsize]
+        tiled_eh = tf.tile(expanded_h, [1, self.capacity, 1])
 
-    	# keys - h: [batchsize x capacity x embeddingsize]
-    	diff = expanded_keys - tiled_eh
+        # keys - h: [batchsize x capacity x embeddingsize]
+        diff = expanded_keys - tiled_eh
 
-    	# distances: [batchsize x capacity]
-    	distances = tf.reduce_sum(
+        # distances: [batchsize x capacity]
+        distances = tf.reduce_sum(
                 tf.square(diff),
                 axis=2
             )
 
-    	# negate distances to get the k closest keys
-    	# indices: [querybatchsize x K] 
+        # negate distances to get the k closest keys
+        # indices: [querybatchsize x K] 
         _, indices = tf.nn.top_k(-distances, k=self.K)
 
         # lookup of 
@@ -128,70 +97,68 @@ class Memory():
         return result
 
     def kernel (self, A,B):
-    	#	1/(e + tf.square(hit_keys - h))
+        #   1/(e + tf.square(hit_keys - h))
         distances = self.sq_distance(A,B)
         weights = tf.reciprocal(distances+tf.constant(1e-4))
-        return weights # weight matrix: [K x batchsize]
+        return weights # weight matrix: [batchsize x K]
 
-    def adaptation(self, h,  niters):
+    def adapt_predict(self, h, niters=10, lr=0.001):
+        # h: [1 x embeddingsize]
+        # niters: [1]
 
         keys, values, weights = self.read(h)
-
-        cost = tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=y)
     
+        original_weights = tf.Variable([0])
+        tf.assign(original_weights,
+                  tf.get_collection(
+                    tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE'
+                    ), 
+                  validate_shape=False
+                  )
+
         weights_to_adapt = tf.get_collection(
             tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE'
             )
-        delta_total = [tf.Variable(tf.zeros(weight.shape), name='delta_total') for weight in weights_to_adapt]
-        for step in range(niters):
+
+        # delta_total = [tf.Variable(tf.zeros(weight.shape), name='delta_total') for weight in weights_to_adapt]
+        
+        logits = self.model(keys)
+        cost = tf.reduce_sum(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=values, weights=weights))
+        reg = tf.reduce_sum(tf.Variable([tf.reduce_sum(tf.square(weights_to_adapt[i] - original_weights[i]) for i in len(original_weights))]))
+        objective = cost + reg
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
 
-        gradients = optimizer.compute_gradients(error, var_list=weights_to_adapt)
+        with tf.Session() as sess:
+            # adapt weights
+            for step in range(niters):
+                gradients = optimizer.compute_gradients(objective, var_list=weights_to_adapt)
+                for i, (grad, var) in enumerate(gradients):
+                    if grad is not None:
+                        gradients[i] = (tf.clip_by_norm(grad, grad_clipping), var)
+                optimize_expr = optimizer.apply_gradients(gradients)
+                sess.run(optimize_expr)
+            # predict
+            yhat = tf.nn.softmax(self.model(h))
 
+        # reset adapted weights
+        tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')
+        for i in range(len(tmp)):
+            tmp[i]= tmp[i].assign(original_weights[i])
 
-########################################################################################################
-encode_vars = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, '{}/encode'.format(scope)
-            )
-
-
-trained_vars = encode_vars
-        for i in range(num_actions):
-            trained_vars += tf.get_collection(
-                tf.GraphKeys.TRAINABLE_VARIABLES, 'dnd{}/KEYS'.format(i))
-        gradients = optimizer.compute_gradients(error, var_list=trained_vars)
-        for i, (grad, var) in enumerate(gradients):
-            if grad is not None:
-                gradients[i] = (tf.clip_by_norm(grad, grad_clipping), var)
-        optimize_expr = optimizer.apply_gradients(gradients)
-
-
-
-capacity = 10
-bs = 5
-
-
-p = 0
-
-0
-1
-2
-3
-4
-
-p = 5 (p = p + bs)
-
-5
-6
-7
-8
-9
-
-p = 10
-capacity = 10
+        return yhat
 
 
 
+    def predict(self, hs):
+
+        yhats = []
+        for h in tf.unstack(hs, axis=0):
+            h = tf.expand_dims(h, axis=0)
+            yhats.append(self.adapt_predict(h))
+
+        return yhats
 
 
 
