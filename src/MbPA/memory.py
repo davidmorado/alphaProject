@@ -111,7 +111,7 @@ class Memory():
         # A = hit_keys: [batchsize x K x embeddingsize]
         # B = h: [batchsize x embeddingsize]
         # computes ||A||^2 - 2*||AB|| + ||B||^2 = A.TA - 2 A.T B + B.T B
-        row_norms_A = tf.reduce_sum(tf.square(A), axis=2) 
+        row_norms_A = tf.reduce_sum(tf.square(A), axis=2)
         row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
         row_norms_B = tf.reshape(row_normsB, [-1, 1])
         # B: [batchsize x embeddingsize x 1]

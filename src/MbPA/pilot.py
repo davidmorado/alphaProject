@@ -7,7 +7,6 @@ from keras.datasets import cifar10
 from keras.utils import to_categorical
 import numpy as np
 
-
 # Data Loading and Preprocessing
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 input_shape = x_train.shape[1:]
