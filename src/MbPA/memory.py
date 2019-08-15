@@ -15,7 +15,7 @@ class Memory():
         self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embeddingsize], dtype=tf.float32), dtype=tf.float32,  name='KEYS')
         self.Values = tf.Variable(tf.zeros([self.capacity, self.target_size], dtype=tf.float32), dtype=tf.float32, name='VALUES')
         self.K = tf.constant(K)
-        self.pointer = tf.Variable(0)
+        self.pointer = 0
         self.train_mode = True
         self.model = model
 
@@ -28,13 +28,14 @@ class Memory():
         self.train_mode = False
 
 
-    def write(h, values):
+    def write(self, h, values):
         # h: shape = (batch_size, embeddingsize) 
         # values: shape = (batch_size, target_size)
         # we assume, capacity is a multiple of batch-size!!!!
 
         if self.pointer >= self.capacity:
             self.pointer = 0
+            print('reset pointer')
 
         indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+self.batch_size))
         tf.scatter_update(self.Keys, indices, updates=h)
@@ -82,9 +83,9 @@ class Memory():
         # computes ||A||^2 - 2*||AB|| + ||B||^2 = A.TA - 2 A.T B + B.T B
         row_norms_A = tf.reduce_sum(tf.square(A), axis=2)
         row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
-        row_norms_B = tf.reshape(row_normsB, [-1, 1])
+        row_norms_B = tf.reshape(row_norms_B, [-1, 1])
         # B: [batchsize x embeddingsize x 1]
-        B = tf.expanddims(B, axis=2)
+        B = tf.expand_dims(B, axis=2)
         # B: [batchsize x embeddingsize x K]
         B = tf.tile(B, [1, 1, self.K])
         # https://stackoverflow.com/questions/38235555/tensorflow-matmul-of-input-matrix-with-batch-data
@@ -108,44 +109,33 @@ class Memory():
 
         keys, values, weights = self.read(h)
     
-        original_weights = tf.Variable([0])
-        tf.assign(original_weights,
-                  tf.get_collection(
-                    tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE'
-                    ), 
-                  validate_shape=False
-                  )
+        collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
+        original_weights = [tf.assign(tf.Variable(tf.zeros(layer.shape), dtype=tf.float32), layer, validate_shape=False) for layer in collections]
+        weights_to_adapt = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
 
-        weights_to_adapt = tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE'
-            )
-
-        # delta_total = [tf.Variable(tf.zeros(weight.shape), name='delta_total') for weight in weights_to_adapt]
-        
         logits = self.model(keys)
         cost = tf.reduce_sum(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=values, weights=weights))
-        reg = tf.reduce_sum(tf.Variable([tf.reduce_sum(tf.square(weights_to_adapt[i] - original_weights[i]) for i in len(original_weights))]))
+        reg = tf.reduce_sum([tf.reduce_sum(tf.square(weights_to_adapt[i] - original_weights[i])) for i in range(len(original_weights))])
         objective = cost + reg
+         
+        with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
+            adapter = tf.train.AdamOptimizer(learning_rate=lr)  
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+            with tf.Session() as sess:
+                # adapt weights
+                for step in range(niters):
+                    gradients = adapter.compute_gradients(objective, var_list=weights_to_adapt)
+                    for i, (grad, var) in enumerate(gradients):
+                        if grad is not None:
+                            gradients[i] = (tf.clip_by_norm(grad, tf.constant(1.0)), var)
+                    adapt_expr = adapter.apply_gradients(gradients)
+                # predict
+                yhat = tf.nn.softmax(self.model(h))
 
-
-        with tf.Session() as sess:
-            # adapt weights
-            for step in range(niters):
-                gradients = optimizer.compute_gradients(objective, var_list=weights_to_adapt)
-                for i, (grad, var) in enumerate(gradients):
-                    if grad is not None:
-                        gradients[i] = (tf.clip_by_norm(grad, grad_clipping), var)
-                optimize_expr = optimizer.apply_gradients(gradients)
-                sess.run(optimize_expr)
-            # predict
-            yhat = tf.nn.softmax(self.model(h))
-
-        # reset adapted weights
-        tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')
-        for i in range(len(tmp)):
-            tmp[i]= tmp[i].assign(original_weights[i])
+            # reset adapted weights
+            tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')
+            for i in range(len(tmp)):
+                tmp[i]= tmp[i].assign(original_weights[i])
 
         return yhat
 
