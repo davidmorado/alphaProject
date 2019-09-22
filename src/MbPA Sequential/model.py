@@ -1,4 +1,8 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
+from keras.layers.normalization import BatchNormalization
+
 
 import tensorflow as tf
 import numpy as np
@@ -53,16 +57,47 @@ def conv_net(x, embedding_size=50):
 
 
 
+def CNN(num_categories, input_shape=(32, 32, 3), layers=[32, 64, 512], embedding_dim=50):
+
+    model = Sequential()
+
+    model.add(Conv2D(layers[0], (3, 3), padding='same',
+                    input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(Conv2D(layers[0], (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(layers[1], (3, 3), padding='same'))
+    model.add(Activation('relu'))
+    model.add(Conv2D(layers[1], (3, 3)))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+
+    model.add(Flatten())
+    model.add(Dense(layers[2]))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(embedding_dim))
+    model.add(Activation('sigmoid'))
+    #model.add(BatchNormalization())
+    #model.add(Dense(10))
+    #model.add(Activation('softmax'))
+    
+    return model
+
 def secondStage(h, embedding_size=50, target_size=10):
     with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
         #full1 = tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(embedding_size/2), activation_fn=tf.nn.relu, scope='SECOND_STAGE/layer1')
         full1 = tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(embedding_size/2), activation_fn=tf.nn.relu)
-        full1 = tf.layers.batch_normalization(full1)
+        #full1 = tf.layers.batch_normalization(full1, name='SS_BatchNorm1')
         #full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/4), activation_fn=tf.nn.relu, scope='SECOND_STAGE/layer2')
-        full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/4), activation_fn=tf.nn.relu)
-        full2 = tf.layers.batch_normalization(full2)
+        #full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=int(embedding_size/4), activation_fn=tf.nn.relu)
+        #full2 = tf.layers.batch_normalization(full2, name='SS_BatchNorm2')
         #logits = tf.contrib.layers.fully_connected(inputs=full2, num_outputs=target_size, activation_fn=None, scope='SECOND_STAGE/layer3')
-        logits = tf.contrib.layers.fully_connected(inputs=full2, num_outputs=target_size, activation_fn=None)
+        logits = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=target_size, activation_fn=None)
     return logits
 
 

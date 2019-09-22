@@ -7,6 +7,8 @@ from keras.datasets import cifar10
 from keras.utils import to_categorical
 import numpy as np
 
+from model import CNN
+
 # Data Loading and Preprocessing
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 input_shape = x_train.shape[1:]
@@ -30,7 +32,7 @@ tf.reset_default_graph()
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
-epochs = 8
+epochs = 80
 batch_size = 32
 learning_rate = 0.0001
 
@@ -39,9 +41,12 @@ M = Memory(secondStage, batch_size=batch_size)
 
 # import sys
 # sys.exit(0)
+NN = CNN(num_categories=10)
+model = NN(inputs=input, outputs=secondStage)
 
-
-embeddings = conv_net(x)
+#embeddings = conv_net(x)
+embeddings = model(x)
+print(embeddings)
 logits = M.model(embeddings)
 
 # Loss and Optimizer
@@ -70,7 +75,7 @@ def training_step(session, optimizer, batch_features, batch_labels):
     return h
 
 def print_stats(session, valid_features, valid_labels):
-    valid_acc = sess.run(accuracy, 
+    valid_acc = session.run(accuracy, 
                          feed_dict={
                              x: valid_features,
                              y: valid_labels
@@ -78,33 +83,40 @@ def print_stats(session, valid_features, valid_labels):
     
     print('Validation Accuracy: {:.6f}'.format(valid_acc))
 
-with tf.Session() as sess:
-    # Initializing the variables
-    sess.run(tf.global_variables_initializer())
-    
-    # Training cycle
-    for epoch in range(epochs):
-        # Loop over all batches
-        n_batches = 5
-        for batch_features, batch_labels in zip(*split_in_batches(x_train, y_train, bs=batch_size)):
-            hs = training_step(sess, optimizer, batch_features, batch_labels)
-            M.write(hs, batch_labels)
-                
-        print('Epoch {:>2}, CIFAR-10 Batch:  '.format(epoch + 1), end='')
-        print_stats(sess, x_test, y_test)
-        print_stats(sess, x_train, y_train)
+#with tf.Session() as sess:
+sess = tf.Session()
+# Initializing the variables
+sess.run(tf.global_variables_initializer())
 
-def predict(x_):
+# Training cycle
+for epoch in range(epochs):
+    # Loop over all batches
+    n_batches = 5
+    for batch_features, batch_labels in zip(*split_in_batches(x_train, y_train, bs=batch_size)):
+        hs = training_step(sess, optimizer, batch_features, batch_labels)
+        M.write(hs, batch_labels)
+            
+    print('Epoch {:>2}, CIFAR-10 Batch:  '.format(epoch + 1), end='')
+    print_stats(sess, x_test, y_test)
+    print_stats(sess, x_train, y_train)
+
+
+def predict(x_, tfsession):
     # x_: [batchsize x 32 x 32 x 3]
     x = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='input_x')
     embeddings = conv_net(x)
     yhats = M.predict(embeddings)
     with tf.Session() as sess:
+        #print(sess.run(M.Keys))
+        #print(sess.run(M.Values))
         sess.run(tf.global_variables_initializer())
+        print('vars inited')
+        print(sess.run(M.Keys))
+        print(sess.run(M.Values))
         return sess.run(yhats, feed_dict={x:x_})
 
 
-yhats = predict(x_test)
+yhats = predict(x_test, sess)
 
 
 
@@ -117,10 +129,10 @@ print('HEREEEEE3')
 correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
-with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    print(sess.run(accuracy, feed_dict={y: y_test}))
+print(sess.run(accuracy, feed_dict={y: y_test}))
 
+
+sess.close()
 
 
 
