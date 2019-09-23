@@ -1,13 +1,13 @@
 import tensorflow as tf
 
-from model import conv_net, secondStage
+from model import conv_net, conv_netV2, secondStage
 from memory import Memory
 
 from keras.datasets import cifar10
 from keras.utils import to_categorical
 import numpy as np
 
-from model import CNN
+
 
 # Data Loading and Preprocessing
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -32,7 +32,7 @@ tf.reset_default_graph()
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
-epochs = 80
+epochs = 10
 batch_size = 32
 learning_rate = 0.0001
 
@@ -41,11 +41,8 @@ M = Memory(secondStage, batch_size=batch_size)
 
 # import sys
 # sys.exit(0)
-NN = CNN(num_categories=10)
-model = NN(inputs=input, outputs=secondStage)
 
-#embeddings = conv_net(x)
-embeddings = model(x)
+embeddings = conv_netV2(x)
 print(embeddings)
 logits = M.model(embeddings)
 
@@ -53,7 +50,9 @@ logits = M.model(embeddings)
 #cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y))
 cost = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=y))
 
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+original_optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+optimizer = tf.contrib.estimator.clip_gradients_by_norm(original_optimizer, clip_norm=2.0)
+train_op  = optimizer.minimize(cost)
 
 # Accuracy
 correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
@@ -93,7 +92,7 @@ for epoch in range(epochs):
     # Loop over all batches
     n_batches = 5
     for batch_features, batch_labels in zip(*split_in_batches(x_train, y_train, bs=batch_size)):
-        hs = training_step(sess, optimizer, batch_features, batch_labels)
+        hs = training_step(sess, train_op, batch_features, batch_labels)
         M.write(hs, batch_labels)
             
     print('Epoch {:>2}, CIFAR-10 Batch:  '.format(epoch + 1), end='')

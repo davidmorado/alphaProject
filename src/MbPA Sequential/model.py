@@ -57,36 +57,60 @@ def conv_net(x, embedding_size=50):
 
 
 
-def CNN(num_categories, input_shape=(32, 32, 3), layers=[32, 64, 512], embedding_dim=50):
 
-    model = Sequential()
 
-    model.add(Conv2D(layers[0], (3, 3), padding='same',
-                    input_shape=input_shape))
-    model.add(Activation('relu'))
-    model.add(Conv2D(layers[0], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
 
-    model.add(Conv2D(layers[1], (3, 3), padding='same'))
-    model.add(Activation('relu'))
-    model.add(Conv2D(layers[1], (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
 
-    model.add(Flatten())
-    model.add(Dense(layers[2]))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(embedding_dim))
-    model.add(Activation('sigmoid'))
-    #model.add(BatchNormalization())
-    #model.add(Dense(10))
-    #model.add(Activation('softmax'))
-    
-    return model
+
+
+
+
+def conv_netV2(x, embedding_size=50):
+    conv1_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 3, 32], mean=0, stddev=0.1))
+    conv1_filter2 = tf.Variable(tf.truncated_normal(shape=[3, 3, 32, 32], mean=0, stddev=0.1))
+    print(conv1_filter2)
+    print(x)
+
+    conv2_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 32, 64], mean=0, stddev=0.1))
+    conv2_filter2 = tf.Variable(tf.truncated_normal(shape=[3, 3, 64, 64], mean=0, stddev=0.1))
+   
+
+    # conv 1 block
+    conv1 = tf.nn.conv2d(x, conv1_filter, strides=[1,1,1,1], padding='SAME')
+    conv1 = tf.nn.relu(conv1)
+    conv1 = tf.nn.conv2d(conv1, conv1_filter2, strides=[1,1,1,1], padding='SAME')
+    conv1 = tf.nn.relu(conv1)
+    conv1_pool = tf.nn.max_pool(conv1, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
+    conv1_pool = tf.nn.dropout(conv1_pool, keep_prob=0.5)
+
+    # conv 2 block
+    conv2 = tf.nn.conv2d(conv1_pool, conv2_filter, strides=[1,1,1,1], padding='SAME')
+    conv2 = tf.nn.relu(conv2)
+    conv2 = tf.nn.conv2d(conv2, conv2_filter2, strides=[1,1,1,1], padding='SAME')
+    conv2 = tf.nn.relu(conv2)
+    conv2_pool = tf.nn.max_pool(conv2, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
+    conv2_pool = tf.nn.dropout(conv2_pool, keep_prob=0.5)
+
+    # dense block
+    flat = tf.contrib.layers.flatten(conv2_pool)  
+    full1 = tf.contrib.layers.fully_connected(inputs=flat, num_outputs=512, activation_fn=tf.nn.relu)
+    full1 = tf.nn.dropout(full1, keep_prob=0.5) 
+    full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=embedding_size, activation_fn=tf.nn.sigmoid)
+    full2 = tf.layers.batch_normalization(full2)
+    return full2 # shape = (batch_size, embeddingsize) 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def secondStage(h, embedding_size=50, target_size=10):
     with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
