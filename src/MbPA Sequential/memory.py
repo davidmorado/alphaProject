@@ -7,7 +7,7 @@ from utils import in_train_phase
 
 class Memory():
 
-    def __init__(self, model, embeddingsize=50, batch_size=128, capacity_multiplier=10, target_size=10, K=20):
+    def __init__(self, model, session, embeddingsize=50, batch_size=128, capacity_multiplier=10, target_size=10, K=20):
         self.batch_size = batch_size
         self.capacity = batch_size * capacity_multiplier
         self.embeddingsize = embeddingsize
@@ -18,8 +18,13 @@ class Memory():
         self.pointer = 0
         self.train_mode = True
         self.model = model
-
-
+        self.session = session
+        
+    
+    def initialize(self):
+        self.session.run(tf.global_variables_initializer())
+        self.session.run(tf.variables_initializer(var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')))
+        #collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
 
     def training(self):
         self.train_mode = True 
@@ -38,10 +43,13 @@ class Memory():
             #print('reset pointer')
 
         indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+self.batch_size))
-        tf.scatter_update(self.Keys, indices, updates=h)
-        tf.scatter_update(self.Values, indices, updates=values)
+        self.session.run(tf.variables_initializer(var_list=[indices]))
+        self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
+        self.Values = tf.scatter_update(self.Values, indices, updates=values)
 
         self.pointer += self.batch_size
+
+        #print(self.session.run(self.Keys))
 
     def read(self, h):
 
@@ -120,22 +128,20 @@ class Memory():
          
         with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
             adapter = tf.train.AdamOptimizer(learning_rate=lr)  
+            
+            for _ in range(niters):
+                gradients = adapter.compute_gradients(objective, var_list=weights_to_adapt)
+                # for i, (grad, var) in enumerate(gradients):
+                #     if grad is not None:
+                #         gradients[i] = (tf.clip_by_norm(grad, tf.constant(1.0)), var)
+                adapt_expr = adapter.apply_gradients(gradients)
+            # predict
+            yhat = tf.nn.softmax(self.model(h))
 
-            with tf.Session() as sess:
-                # adapt weights
-                for step in range(niters):
-                    gradients = adapter.compute_gradients(objective, var_list=weights_to_adapt)
-                    # for i, (grad, var) in enumerate(gradients):
-                    #     if grad is not None:
-                    #         gradients[i] = (tf.clip_by_norm(grad, tf.constant(1.0)), var)
-                    adapt_expr = adapter.apply_gradients(gradients)
-                # predict
-                yhat = tf.nn.softmax(self.model(h))
-
-            # reset adapted weights
-            tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')
-            for i in range(len(tmp)):
-                tmp[i]= tmp[i].assign(original_weights[i])
+        # reset adapted weights
+        tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')
+        for i in range(len(tmp)):
+            tmp[i]= tmp[i].assign(original_weights[i])
 
         return yhat
 
@@ -143,8 +149,9 @@ class Memory():
 
     def predict(self, hs):
         yhats = []
+        print('predicting')
         for h in tf.unstack(hs, axis=0):
-            print('predicting', h)
+            #print('predicting', h)
             h = tf.expand_dims(h, axis=0)
             prediction = self.adapt_predict(h)
             yhats.append(prediction)

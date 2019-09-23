@@ -100,17 +100,6 @@ def conv_netV2(x, embedding_size=50):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 def secondStage(h, embedding_size=50, target_size=10):
     with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
         #full1 = tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(embedding_size/2), activation_fn=tf.nn.relu, scope='SECOND_STAGE/layer1')

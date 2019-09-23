@@ -22,10 +22,10 @@ x_test = x_test/255
 y_train = to_categorical(y_train, num_classes)
 y_test = to_categorical(y_test, num_classes)
 
-x_train = x_train[:300]
-y_train = y_train[:300]
-x_test = x_test[:20]
-y_test = y_test[:20]
+x_train = x_train[:300].astype(np.float32)
+y_train = y_train[:300].astype(np.float32)
+x_test = x_test[:20].astype(np.float32)
+y_test = y_test[:20].astype(np.float32)
 
 # x_train = tf.random.shuffle(x_train,seed=1)
 # y_train = tf.random.shuffle(y_train, seed=1)
@@ -37,11 +37,14 @@ tf.reset_default_graph()
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
-epochs = 50
+epochs = 3
 batch_size = 32
 learning_rate = 0.001
 
-M = Memory(secondStage, batch_size=batch_size)
+sess = tf.Session()
+#sess.run(tf.global_variables_initializer())
+
+M = Memory(secondStage, batch_size=batch_size, session=sess)
 embeddings = conv_netV2(x)
 logits = M.model(embeddings)
 
@@ -73,9 +76,11 @@ def print_stats(session, valid_features, valid_labels):
     print('Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
 
 #with tf.Session() as sess:
-sess = tf.Session()
+#sess = tf.Session()
 # Initializing the variables
-sess.run(tf.global_variables_initializer())
+#sess.run(tf.global_variables_initializer())
+
+M.initialize()
 
 # Training cycle
 for epoch in range(epochs):
@@ -96,17 +101,21 @@ for epoch in range(epochs):
 
 def predict(x_, tfsession):
     # x_: [batchsize x 32 x 32 x 3]
-    x = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='input_x')
-    embeddings = conv_net(x)
-    yhats = M.predict(embeddings)
-    with tf.Session() as sess:
-        #print(sess.run(M.Keys))
-        #print(sess.run(M.Values))
-        sess.run(tf.global_variables_initializer())
+    print(x_)
+    print(x_.shape)
+    print(x_.dtype)
+    #x_in = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='x_in', )
+    hs_ = tfsession.run(embeddings, feed_dict={x:x_})
+    yhats = M.predict(hs_)
+    with tfsession as sess:
+        #sess.run(tf.global_variables_initializer())
         print('vars inited')
         print(sess.run(M.Keys))
         print(sess.run(M.Values))
         return sess.run(yhats, feed_dict={x:x_})
+
+print(M.Keys)
+print(sess.run(M.Keys))
 
 yhats = predict(x_test, sess)
 
