@@ -35,7 +35,7 @@ class Memory():
 
         if self.pointer >= self.capacity:
             self.pointer = 0
-            print('reset pointer')
+            #print('reset pointer')
 
         indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+self.batch_size))
         tf.scatter_update(self.Keys, indices, updates=h)

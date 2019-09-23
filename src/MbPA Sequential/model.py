@@ -68,8 +68,6 @@ def conv_net(x, embedding_size=50):
 def conv_netV2(x, embedding_size=50):
     conv1_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 3, 32], mean=0, stddev=0.1))
     conv1_filter2 = tf.Variable(tf.truncated_normal(shape=[3, 3, 32, 32], mean=0, stddev=0.1))
-    print(conv1_filter2)
-    print(x)
 
     conv2_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 32, 64], mean=0, stddev=0.1))
     conv2_filter2 = tf.Variable(tf.truncated_normal(shape=[3, 3, 64, 64], mean=0, stddev=0.1))
@@ -97,7 +95,7 @@ def conv_netV2(x, embedding_size=50):
     full1 = tf.nn.dropout(full1, keep_prob=0.5) 
     full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=embedding_size, activation_fn=tf.nn.sigmoid)
     full2 = tf.layers.batch_normalization(full2)
-    full2 = tf.contrib.layers.fully_connected(inputs=full2, num_outputs=10, activation_fn=None)
+    #full2 = tf.contrib.layers.fully_connected(inputs=full2, num_outputs=10, activation_fn=None)
     return full2 # shape = (batch_size, embeddingsize) 
 
 
