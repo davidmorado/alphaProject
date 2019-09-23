@@ -69,6 +69,10 @@ batch_size = 32
 learning_rate = 0.001
 
 
+
+
+
+
 model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer = keras.optimizers.Adam(
                     lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
@@ -78,6 +82,7 @@ history = model.fit(x_train, y_train,
             batch_size=batch_size,
             epochs=epochs,
             verbose=1,
+            shuffle=False,
             validation_data=(x_test, y_test)
 )
 
