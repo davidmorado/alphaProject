@@ -174,8 +174,8 @@ def fit_evaluate( model, x_train, y_train, x_test,  y_test, batch_size, epochs, 
 
 
 batch_size = 64
-lr = 0.0001
-epochs = 30
+lr = 0.001
+epochs = 1
 
 perc_data = [0.1, 0.2, 0.4, 0.8,1.0]
 for p in perc_data:
