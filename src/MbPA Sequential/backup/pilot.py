@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from model import conv_net, conv_netV2, secondStage, SecondStage
+from model import conv_net, conv_netV2, secondStage
 from memory import Memory
 
 from keras.datasets import cifar10
@@ -44,8 +44,7 @@ learning_rate = 0.001
 sess = tf.Session()
 #sess.run(tf.global_variables_initializer())
 
-M = Memory(SecondStage(), batch_size=batch_size, session=sess)
-M.initialize()
+M = Memory(secondStage, batch_size=batch_size, session=sess)
 embeddings = conv_netV2(x)
 logits = M.model(embeddings)
 
@@ -81,7 +80,7 @@ def print_stats(session, valid_features, valid_labels):
 # Initializing the variables
 #sess.run(tf.global_variables_initializer())
 
-
+M.initialize()
 
 # Training cycle
 for epoch in range(epochs):

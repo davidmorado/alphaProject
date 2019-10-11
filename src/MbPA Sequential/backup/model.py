@@ -113,56 +113,6 @@ def secondStage(h, embedding_size=50, target_size=10):
     return logits
 
 
-
-
-
-
-class SecondStage():
-
-    def __init__(self, embedding_size=50, target_size=10):
-        
-        self.embedding_size = embedding_size
-        self.target_size = target_size
-        self.session = None
-                
-
-        with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
-            self.h = tf.placeholder(tf.float32, shape=(None, self.embedding_size), name='h')
-            self.full1 = lambda h:tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(self.embedding_size/2), activation_fn=tf.nn.relu)
-            self.logits = lambda full1: tf.contrib.layers.fully_connected(inputs=full1, num_outputs=target_size, activation_fn=None)
-        
-    
-    def __call__(self, h):
-        if self.session is None:
-            raise('No session assigned to instance of SecondStage')
-
-        #return self.session.run(self.logits, feed_dict={self.h : h})
-        return self.logits(self.full1(h))
-        
-
-    def __init_session(self):
-        if self.session is None:
-            raise('No session assigned to instance of SecondStage')
-        self.session.run(tf.variables_initializer(var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')))
-
-
-    def set_session(self, sess):
-        self.session = sess 
-        self.__init_session()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # tmp_weights = full1.weights 
 # full1.weights = tmp_weights + adaptation
 # # do prediction
