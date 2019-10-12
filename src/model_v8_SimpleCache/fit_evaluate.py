@@ -2,6 +2,7 @@ import keras
 from keras import Model
 import tensorflow as tf
 import numpy as np
+import pdb
 
 def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, lr, logstring, cache_fraction=1, lmbd=1):
 
@@ -67,96 +68,59 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
     x_train_sub = x_train[cache_indices, :, :, :]
     y_train_sub = y_train[cache_indices, :]
 
-    print('x_train_sub/y_train_sub.shape')
-    print(x_train_sub.shape)
-    print(y_train_sub.shape) 
+    # replace x/y_test with x/y_train_sub should return 100% accuracy
+    if True:
+        x_test = x_train_sub
+        y_test = y_train_sub
 
+    if False:
+        x_test = x_train_sub[:-1, :, :, :]
+        y_test = y_train_sub[:-1, :]
+
+    print('shape')
+    print(x_test.shape)
+    print(y_test.shape)
+
+    # Pass subset items through memory to extract the activations for each memory point
     memkeys_list = memory_extractor.predict(x_train_sub)
-    print('memkeys_list:')
-    for key in memkeys_list:
-        print(key.shape)
-
-    if len(mem_layers) == 1:
-        memkeys_list = memkeys_list[None,:]
-
+    if len(mem_layers) == 1: memkeys_list = memkeys_list[None,:]
     mem_keys = np.reshape(memkeys_list[0],(x_train_sub.shape[0],-1))
-
     for i in range(len(mem_layers)-1):
         mem_keys = np.concatenate((mem_keys, np.reshape(memkeys_list[i+1],(x_train_sub.shape[0],-1))),axis=1)
-    
+
     # Memory values
     mem_vals = y_train_sub
-
-    # replace x/y_test with x/y_train_sub should return 100% accuracy
-    x_test = x_train_sub
-    y_test = y_train_sub
 
     # Pass test items through memory to extract the activations for each memory point
     testmem_list = memory_extractor.predict(x_test)
     if len(mem_layers) == 1: testmem_list = testmem_list[None,:] 
-    test_mem = np.reshape(testmem_list[0],(x_test.shape[0],-1))
-
-    # concatenate all extracted layers to get a value vector for each data point in the 
+    test_mem = np.reshape(testmem_list[0],(x_test.shape[0],-1)) # get first activation
     for i in range(len(mem_layers)-1):
         test_mem = np.concatenate((test_mem, np.reshape(testmem_list[i+1],(x_test.shape[0],-1))),axis=1)
-    print('test_mem.shape')
-    print(test_mem.shape)
 
     # Normalize keys and query
-    print('test_mem')
-    print(test_mem.shape)
-    query = test_mem / np.sqrt(np.tile(np.sum(test_mem**2, axis=1, keepdims=1), (1,test_mem.shape[1])))
-    print('query')
-    print(query.shape)
-    key = mem_keys / np.sqrt(np.tile(np.sum(mem_keys**2, axis=1, keepdims=1),(1,mem_keys.shape[1])))
+    key = mem_keys / np.sqrt(np.tile(np.sum(mem_keys**2, axis=1, keepdims=1), (1, mem_keys.shape[1])))
+    query = test_mem / np.sqrt(np.tile(np.sum(test_mem**2, axis=1, keepdims=1), (1, test_mem.shape[1])))
 
-    #np.savetxt('query.csv', query, delimiter=',')
-    #np.savetxt('key.csv', key, delimiter=',')
-    # 5.10.2019: both 'key' and 'query' contain exactly the same elements, just like expected 
-    # ---> this means the similarity measure is somehow not working 
-
-    # OLD CODE (replaced p_mem with p_mem_enum in the new one)
-    # theta = 0.9   
-    # similarities = np.exp(theta * np.dot(query, key.T)) # see
-    # p_mem = np.matmul(similarities, mem_vals)
-    # p_mem = p_mem / np.repeat(np.sum(p_mem, axis=1, keepdims=True), num_classes, axis=1)
-
-    theta = 0.9
-    similarities = np.exp(theta * np.dot(query, key.T)) # Eq(1)
-    print('similarities.shape')
-    print(similarities.shape)
-    print(similarities[:10])
-    p_mem_enum = np.matmul(similarities, mem_vals) # Eq(2) enumerator
-    p_mem_denom = np.repeat(np.sum(similarities, axis=1, keepdims=True), num_classes, axis=1) #Eq(2) denominator
+    theta = 0.6
+    similarities = np.exp(theta * (query@key.T)) # Eq(1)
+    similarities_ = np.repeat(np.expand_dims(similarities, axis=2), num_classes, axis=2)
+    mem_vals_ = np.repeat(np.expand_dims(mem_vals, axis=1), x_test.shape[0], axis=1)
+    p_mem_enum = np.sum(np.multiply(similarities_, mem_vals_), axis=1, keepdims=False) # Eq(2) enumerator
+    p_mem_denom = np.repeat(np.expand_dims(np.sum(similarities, axis=0), axis=1), num_classes, axis=1) #Eq(2) denominator
+    # p_mem_enum = np.matmul(similarities, mem_vals) # Eq(2) enumerator
+    # p_mem_denom = np.repeat(np.sum(similarities, axis=1, keepdims=True), num_classes, axis=1) #Eq(2) denominator
     p_mem = p_mem_enum / p_mem_denom #Eq(2)
-    print('p_mem.shape')
-    print(p_mem.shape)
 
     p_model = model.predict(x_test)
-    print('p_model')
-    print(p_model.shape)
-    
-    # lmbd is passed 
-    print('lmbd')
-    print(lmbd)
-    p_combined = (1.0-lmbd) * p_model + lmbd * p_mem
-    print('np.argmax(p_combined, axis=1)[:10]')
-    for i in np.argmax(p_combined, axis=1)[:10]:
-        print(i)
-    print('np.argmax(y_test, axis=1)[:10]')
-    for i in np.argmax(y_test, axis=1)[:10]:
-        print(i)
-    print('p_combined.shape')
-    print(p_combined.shape)
-    print(p_combined[:10])
-    print('true values')
-    print(y_test[:10])
 
+    # lmbd is passed 
+    lmbd = 0.5
+    p_combined = (1.0-lmbd) * p_model + lmbd * p_mem
     pred_combined = np.argmax(p_combined, axis=1)
     y_test_int = np.argmax(y_test, axis=1)
     print('This should return 100% Accuracy when using x_test = x_train_sub:')
     test_acc = np.mean(pred_combined==y_test_int)
-
 
     print('Mem. shape:', mem_keys.shape)
     print('Mem. accuracy:', test_acc)
@@ -170,6 +134,8 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
     loss = history.history['loss']
     val_loss = history.history['val_loss']
 
+    pdb.set_trace()
+
     metrics_dict = {
         'acc': acc,
         'val_acc': val_acc,
@@ -181,4 +147,7 @@ def fit_evaluate(model, x_train, y_train, x_test,  y_test, batch_size, epochs, l
     
     scores = model.evaluate(x_test, y_test)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+
+
+    
     return metrics_dict, key
