@@ -11,6 +11,14 @@ import sys
 from random_mini_batches import random_mini_batches
 
 
+# hyperparameters
+epochs = 100
+batch_size = 32
+learning_rate = 0.001
+nearest_neighbors = 50
+validation_freq = 10
+
+
 # Data Loading and Preprocessing
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 input_shape = x_train.shape[1:]
@@ -37,9 +45,7 @@ tf.reset_default_graph()
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
-epochs = 100
-batch_size = 32
-learning_rate = 0.001
+
 
 sess = tf.Session()
 #sess.run(tf.global_variables_initializer())
@@ -59,6 +65,25 @@ train_op  = original_optimizer.minimize(cost)
 # Accuracy
 correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
+
+
+def predict(x_, tfsession):
+    # x_: [batchsize x 32 x 32 x 3]
+    print(x_.shape)
+    print(x_.dtype)
+    #x_in = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='x_in', )
+    hs_ = tfsession.run(embeddings, feed_dict={x:x_})
+    yhats = M.predict(hs_)
+    
+    #sess.run(tf.global_variables_initializer())
+    print('vars inited')
+    print(tfsession.run(M.Keys))
+    print(tfsession.run(M.Values))
+    return tfsession.run(yhats, feed_dict={x:x_})
+
+
+    
+
 
 def training_step(session, optimizer, batch_features, batch_labels):
     _, h = session.run([optimizer, embeddings],
@@ -106,19 +131,7 @@ for epoch in range(epochs):
 
 
 
-def predict(x_, tfsession):
-    # x_: [batchsize x 32 x 32 x 3]
-    print(x_.shape)
-    print(x_.dtype)
-    #x_in = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='x_in', )
-    hs_ = tfsession.run(embeddings, feed_dict={x:x_})
-    yhats = M.predict(hs_)
-    
-    #sess.run(tf.global_variables_initializer())
-    print('vars inited')
-    print(tfsession.run(M.Keys))
-    print(tfsession.run(M.Values))
-    return tfsession.run(yhats, feed_dict={x:x_})
+
 
 print(M.Keys)
 print('before predicting: ', sess.run(M.Keys))

@@ -119,7 +119,7 @@ def secondStage(h, embedding_size=50, target_size=10):
 
 class SecondStage():
 
-    def __init__(self, embedding_size=50, target_size=10):
+    def __init__(self, embedding_size=100, target_size=10):
         
         self.embedding_size = embedding_size
         self.target_size = target_size
