@@ -12,8 +12,8 @@ class Memory():
         self.capacity = batch_size * capacity_multiplier
         self.embeddingsize = embeddingsize
         self.target_size = target_size
-        self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embeddingsize], dtype=tf.float32), dtype=tf.float32,  name='KEYS')
-        self.Values = tf.Variable(tf.zeros([self.capacity, self.target_size], dtype=tf.float32), dtype=tf.float32, name='VALUES')
+        self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embeddingsize], dtype=tf.float32), dtype=tf.float32,  name='KEYS', trainable=False)
+        self.Values = tf.Variable(tf.zeros([self.capacity, self.target_size], dtype=tf.float32), dtype=tf.float32, name='VALUES', trainable=False)
         self.K = tf.constant(K)
         self.pointer = 0
         self.train_mode = True
@@ -23,12 +23,8 @@ class Memory():
         
     
     def initialize(self):
-        self.session.run(tf.global_variables_initializer())
-        #self.session.run(tf.variables_initializer(var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')))
-        print(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE'))
-        print(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES))
-
         self.model.set_session(self.session)
+
         
 
         #collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
@@ -126,24 +122,25 @@ class Memory():
     
         collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
         original_weights = [tf.assign(tf.Variable(tf.zeros(layer.shape)), layer, validate_shape=False) for layer in collections]
-        weights_to_adapt = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
+        with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
+            weights_to_adapt = [tf.Variable(layer)  for layer in collections]
         
         logits = self.model(keys)
         cost = tf.reduce_sum(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=values, weights=weights))
         reg = tf.reduce_sum([tf.reduce_sum(tf.square(weights_to_adapt[i] - original_weights[i])) for i in range(len(original_weights))])
         objective = cost + reg
          
-        with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
-            adapter = tf.train.AdamOptimizer(learning_rate=lr)  
-            
-            for _ in range(niters):
-                gradients = adapter.compute_gradients(objective, var_list=weights_to_adapt)
-                # for i, (grad, var) in enumerate(gradients):
-                #     if grad is not None:
-                #         gradients[i] = (tf.clip_by_norm(grad, tf.constant(1.0)), var)
-                adapt_expr = adapter.apply_gradients(gradients)
-            # predict
-            yhat = tf.nn.softmax(self.model(h))
+        #with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
+        adapter = tf.train.AdamOptimizer(learning_rate=lr)  
+        #self.session.run(tf.variables_initializer(var_list=[adapter]))
+        for _ in range(niters):
+            gradients = adapter.compute_gradients(objective, var_list=weights_to_adapt)
+            # for i, (grad, var) in enumerate(gradients):
+            #     if grad is not None:
+            #         gradients[i] = (tf.clip_by_norm(grad, tf.constant(1.0)), var)
+            adapt_expr = adapter.apply_gradients(gradients)
+        # predict
+        yhat = tf.nn.softmax(self.model(h))
 
         # reset adapted weights
         tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')

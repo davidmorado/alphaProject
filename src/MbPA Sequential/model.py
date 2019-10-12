@@ -137,7 +137,8 @@ class SecondStage():
             raise('No session assigned to instance of SecondStage')
 
         #return self.session.run(self.logits, feed_dict={self.h : h})
-        return self.logits(self.full1(h))
+        with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
+            return self.logits(self.full1(h))
         
 
     def __init_session(self):
@@ -148,7 +149,7 @@ class SecondStage():
 
     def set_session(self, sess):
         self.session = sess 
-        self.__init_session()
+        #self.__init_session()
 
 
 

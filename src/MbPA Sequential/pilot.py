@@ -22,10 +22,10 @@ x_test = x_test/255
 y_train = to_categorical(y_train, num_classes)
 y_test = to_categorical(y_test, num_classes)
 
-x_train = x_train[:300].astype(np.float32)
-y_train = y_train[:300].astype(np.float32)
-x_test = x_test[:20].astype(np.float32)
-y_test = y_test[:20].astype(np.float32)
+x_train = x_train[:500].astype(np.float32)
+y_train = y_train[:500].astype(np.float32)
+x_test = x_test[:100].astype(np.float32)
+y_test = y_test[:100].astype(np.float32)
 
 # x_train = tf.random.shuffle(x_train,seed=1)
 # y_train = tf.random.shuffle(y_train, seed=1)
@@ -37,7 +37,7 @@ tf.reset_default_graph()
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
-epochs = 3
+epochs = 100
 batch_size = 32
 learning_rate = 0.001
 
@@ -68,20 +68,26 @@ def training_step(session, optimizer, batch_features, batch_labels):
                 })
     return h
 
-def print_stats(session, valid_features, valid_labels):
+def print_stats(session, train_features, train_labels, valid_features, valid_labels):
     valid_acc, valid_cost = session.run([accuracy, cost],
                          feed_dict={
                              x: valid_features,
                              y: valid_labels
                          })
-    print('Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
+    train_acc, train_cost = session.run([accuracy, cost],
+                         feed_dict={
+                             x: train_features,
+                             y: train_labels
+                         })
+    print('Accuracy: {:.6f} \t Cost: {:.6f}'.format(train_acc, train_cost), '\t' + 'Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
 
 #with tf.Session() as sess:
 #sess = tf.Session()
 # Initializing the variables
-#sess.run(tf.global_variables_initializer())
+sess.run(tf.global_variables_initializer())
 
-
+print('before training: ', tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE'))
+print('before training: ', tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES))
 
 # Training cycle
 for epoch in range(epochs):
@@ -94,9 +100,9 @@ for epoch in range(epochs):
         #_, hs = sess.run([embeddings, train_op], feed_dict={x: batch_X, y: batch_Y})
         M.write(hs, batch_Y)
             
-    print('Epoch {:>2}, CIFAR-10 Batch:  '.format(epoch + 1), end='')
+    print('Epoch {:>2}:\t'.format(epoch + 1), end='')
     #print_stats(sess, x_test, y_test)
-    print_stats(sess, x_train, y_train)
+    print_stats(sess, x_train, y_train, x_test, y_test)
 
 
 
@@ -107,33 +113,35 @@ def predict(x_, tfsession):
     #x_in = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='x_in', )
     hs_ = tfsession.run(embeddings, feed_dict={x:x_})
     yhats = M.predict(hs_)
-    with tfsession as sess:
-        #sess.run(tf.global_variables_initializer())
-        print('vars inited')
-        print(sess.run(M.Keys))
-        print(sess.run(M.Values))
-        return sess.run(yhats, feed_dict={x:x_})
+    
+    #sess.run(tf.global_variables_initializer())
+    print('vars inited')
+    print(tfsession.run(M.Keys))
+    print(tfsession.run(M.Values))
+    return tfsession.run(yhats, feed_dict={x:x_})
 
 print(M.Keys)
-print(sess.run(M.Keys))
+print('before predicting: ', sess.run(M.Keys))
 
 yhats = predict(x_test, sess)
 
+print(M.Keys)
+print('after predicting: ', sess.run(M.Keys))
 
 
-print('HEREEEEE1')
-print(np.array(yhats))
-print(np.array(yhats).shape)
-print('HEREEEEE2')
-print(y)
-print('HEREEEEE3')
+# print('HEREEEEE1')
+# print(np.array(yhats))
+# print(np.array(yhats).shape)
+# print('HEREEEEE2')
+# print(y)
+# print('HEREEEEE3')
 correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
 print(sess.run(accuracy, feed_dict={y: y_test}))
 
 
-sess.close()
+#sess.close()
 
 
 
