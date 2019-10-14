@@ -1,0 +1,9 @@
+nearest_neighbors:
+  - 20
+  - 50
+  - 100
+update_period:
+  - 2
+  - 10
+
+

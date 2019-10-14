@@ -4,7 +4,6 @@ import yaml
 from sklearn.model_selection import ParameterGrid
 import argparse
 import subprocess
-import sys 
 
 # creates folders
 folders = ['models', 'gridresults', 'plots', 'tb_logs', 'errs', 'logs']
@@ -38,10 +37,7 @@ for i, combination in enumerate(params_grid):
 	    os.system(F"sbatch template.sh {combination}")
     elif platform == 'local':
         print(i)
-        sys.stdout.flush()
-        process = subprocess.Popen(F'template_python.sh "{combination}" {i}', shell=True)
-        process.wait()
-        #os.system(F'template_python.sh "{combination}" {i}')
+        os.system(F'template_python.sh "{combination}" {i}')
     else:
         raise('Platform (--platform) must be specified as one of (slurm, local)')
 

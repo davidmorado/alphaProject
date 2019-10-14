@@ -19,21 +19,37 @@ nearest_neighbors = 50
 validation_freq = 10
 
 
+# read hyperparameters from command line arguments and overwrite default ones
+hp_dict_str = sys.argv[1]
+import yaml
+hp_dict = yaml.load(hp_dict_str)
+
+#hp_dict = ast.literal_eval(hp_dict_str)
+for key,val in hp_dict.items():
+    exec(key + '=val')
+print('nearest_neighbors: ',nearest_neighbors)
+print('update_period: ',update_period)
+
+
+
+
 # Data Loading and Preprocessing
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+# (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio)
+
 input_shape = x_train.shape[1:]
-num_classes = np.max(y_test)+1
+num_classes = np.max(y_val)+1
 num_samples = x_train.shape[0]
 
 x_train = x_train/255
-x_test = x_test/255
+x_val = x_val/255
 y_train = to_categorical(y_train, num_classes)
-y_test = to_categorical(y_test, num_classes)
+y_val = to_categorical(y_val, num_classes)
 
 x_train = x_train[:500].astype(np.float32)
 y_train = y_train[:500].astype(np.float32)
-x_test = x_test[:100].astype(np.float32)
-y_test = y_test[:100].astype(np.float32)
+x_val = x_val[:100].astype(np.float32)
+y_val = y_val[:100].astype(np.float32)
 
 # x_train = tf.random.shuffle(x_train,seed=1)
 # y_train = tf.random.shuffle(y_train, seed=1)
@@ -106,8 +122,7 @@ def print_stats(session, train_features, train_labels, valid_features, valid_lab
                          })
     print('Accuracy: {:.6f} \t Cost: {:.6f}'.format(train_acc, train_cost), '\t' + 'Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
 
-#with tf.Session() as sess:
-#sess = tf.Session()
+
 # Initializing the variables
 sess.run(tf.global_variables_initializer())
 
@@ -126,8 +141,8 @@ for epoch in range(epochs):
         M.write(hs, batch_Y)
             
     print('Epoch {:>2}:\t'.format(epoch + 1), end='')
-    #print_stats(sess, x_test, y_test)
-    print_stats(sess, x_train, y_train, x_test, y_test)
+    #print_stats(sess, x_val, y_val)
+    print_stats(sess, x_train, y_train, x_val, y_val)
 
 
 
@@ -136,7 +151,7 @@ for epoch in range(epochs):
 print(M.Keys)
 print('before predicting: ', sess.run(M.Keys))
 
-yhats = predict(x_test, sess)
+yhats = predict(x_val, sess)
 
 print(M.Keys)
 print('after predicting: ', sess.run(M.Keys))
@@ -151,7 +166,7 @@ print('after predicting: ', sess.run(M.Keys))
 correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
-print(sess.run(accuracy, feed_dict={y: y_test}))
+print(sess.run(accuracy, feed_dict={y: y_val}))
 
 
 #sess.close()
