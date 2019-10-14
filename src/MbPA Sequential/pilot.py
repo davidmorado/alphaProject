@@ -31,6 +31,17 @@ print('nearest_neighbors: ',nearest_neighbors)
 print('update_period: ',update_period)
 
 
+# lists for storing data about accuracy and loss:
+history = {
+    'train' : {
+                'memory' : {'acc' : [], 'loss':[]},                 
+                'no_memory' : {'acc' : [], 'loss' : []}
+            }, 
+    'valid' : {
+                'memory' : {'acc' : [], 'loss':[]}, 
+                'no_memory' : {'acc' : [], 'loss' : []}
+            }
+}
 
 
 # Data Loading and Preprocessing
@@ -62,10 +73,10 @@ x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
 
 
-
+# start tf session
 sess = tf.Session()
-#sess.run(tf.global_variables_initializer())
 
+# build network with memory
 M = Memory(SecondStage(), batch_size=batch_size, session=sess)
 M.initialize()
 embeddings = conv_netV2(x)
@@ -82,68 +93,75 @@ train_op  = original_optimizer.minimize(cost)
 correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
+# accuracy when memroy is used
+yhat_placeholder = tf.placeholder(tf.float32, shape=(None, 10), name='yhat_placeholder')
+correct_pred_mem = tf.equal(tf.argmax(np.squeeze(np.array(yhat_placeholder), axis=1), 1), tf.argmax(y, 1))
+accuracy_mem = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy_memory')
+
+# print(sess.run(accuracy, feed_dict={y: y_val}))
+
 
 def predict(x_, tfsession):
     # x_: [batchsize x 32 x 32 x 3]
-    print(x_.shape)
-    print(x_.dtype)
-    #x_in = tf.placeholder(tf.float32, shape=(x_.shape[0], 32, 32, 3), name='x_in', )
+
     hs_ = tfsession.run(embeddings, feed_dict={x:x_})
     yhats = M.predict(hs_)
-    
-    #sess.run(tf.global_variables_initializer())
-    print('vars inited')
-    print(tfsession.run(M.Keys))
-    print(tfsession.run(M.Values))
     return tfsession.run(yhats, feed_dict={x:x_})
 
-
-    
-
-
 def training_step(session, optimizer, batch_features, batch_labels):
-    _, h = session.run([optimizer, embeddings],
-                feed_dict={
-                    x: batch_features,
-                    y: batch_labels
-                })
+    _, h = session.run([optimizer, embeddings], feed_dict={x : batch_features, y : batch_labels})
     return h
-
-def print_stats(session, train_features, train_labels, valid_features, valid_labels):
-    valid_acc, valid_cost = session.run([accuracy, cost],
-                         feed_dict={
-                             x: valid_features,
-                             y: valid_labels
-                         })
-    train_acc, train_cost = session.run([accuracy, cost],
-                         feed_dict={
-                             x: train_features,
-                             y: train_labels
-                         })
-    print('Accuracy: {:.6f} \t Cost: {:.6f}'.format(train_acc, train_cost), '\t' + 'Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
 
 
 # Initializing the variables
 sess.run(tf.global_variables_initializer())
 
-print('before training: ', tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE'))
-print('before training: ', tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES))
 
 # Training cycle
 for epoch in range(epochs):
     # Loop over all batches
     minibatches = random_mini_batches(x_train, y_train, batch_size, 1)
     minibatches = minibatches[:-1]
+    tmp_loss, tmp_acc = [], []
     for i, minibatch in enumerate(minibatches):
         batch_X, batch_Y = minibatch
-        hs = training_step(sess, train_op, batch_X, batch_Y)
-        #_, hs = sess.run([embeddings, train_op], feed_dict={x: batch_X, y: batch_Y})
-        M.write(hs, batch_Y)
-            
-    print('Epoch {:>2}:\t'.format(epoch + 1), end='')
-    #print_stats(sess, x_val, y_val)
-    print_stats(sess, x_train, y_train, x_val, y_val)
 
+        # training step and append to memroy
+        hs = training_step(sess, train_op, batch_X, batch_Y)
+        M.write(hs, batch_Y)
+
+        # gather loss and accuracy on batch:
+        train_acc, train_loss = session.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
+        tmp_acc.append(train_acc)
+        tmp_loss.append(train_loss)
+
+    # compute training accuracy and loss
+    train_acc = np.mean(tmp_acc))
+    train_loss = np.mean(tmp_loss))
+
+    # compute validation accuracy and loss
+    valid_acc, valid_cost = session.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
+
+    # compute validation accuracy when using memory
+    if epoch % validation_freq == 0:
+        yhats = predict(x_val, sess)
+        mem_val_acc = sess.run(accuracy_mem, feed_dict={y: y_val, yhat_placeholder : yhats})
+        history['valid']['memory']['acc']
+
+    print('Epoch {:>2}:\t'.format(epoch + 1), end='')
+    print('Accuracy: {:.6f} \t Cost: {:.6f}'.format(train_acc, train_cost), '\t' + 'Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
+
+
+history = {
+    'train' : {
+                'memory' : {'acc' : [], 'loss':[]},                 
+                'no_memory' : {'acc' : [], 'loss' : []}
+            }, 
+    'valid' : {
+                'memory' : {'acc' : [], 'loss':[]}, 
+                'no_memory' : {'acc' : [], 'loss' : []}
+            }
+}
 
 
 
@@ -157,19 +175,10 @@ print(M.Keys)
 print('after predicting: ', sess.run(M.Keys))
 
 
-# print('HEREEEEE1')
-# print(np.array(yhats))
-# print(np.array(yhats).shape)
-# print('HEREEEEE2')
-# print(y)
-# print('HEREEEEE3')
-correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
-
 print(sess.run(accuracy, feed_dict={y: y_val}))
 
-
-#sess.close()
+# close tf session
+sess.close()
 
 
 

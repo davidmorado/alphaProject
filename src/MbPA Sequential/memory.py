@@ -153,9 +153,8 @@ class Memory():
 
     def predict(self, hs):
         yhats = []
-        print('predicting')
+        #print('predicting')
         for h in tf.unstack(hs, axis=0):
-            #print('predicting', h)
             h = tf.expand_dims(h, axis=0)
             prediction = self.adapt_predict(h)
             yhats.append(prediction)
