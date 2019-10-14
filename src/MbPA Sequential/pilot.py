@@ -9,7 +9,7 @@ import numpy as np
 import sys
 
 from random_mini_batches import random_mini_batches
-
+from data_loader import get_dataset
 
 # hyperparameters
 epochs = 100
@@ -20,21 +20,21 @@ validation_freq = 10
 
 
 # read hyperparameters from command line arguments and overwrite default ones
-hp_dict_str = sys.argv[1]
-import yaml
-hp_dict = yaml.load(hp_dict_str)
+# hp_dict_str = sys.argv[1]
+# import yaml
+# hp_dict = yaml.load(hp_dict_str)
 
-#hp_dict = ast.literal_eval(hp_dict_str)
-for key,val in hp_dict.items():
-    exec(key + '=val')
-print('nearest_neighbors: ',nearest_neighbors)
-print('update_period: ',update_period)
+# #hp_dict = ast.literal_eval(hp_dict_str)
+# for key,val in hp_dict.items():
+#     exec(key + '=val')
+# print('nearest_neighbors: ',nearest_neighbors)
+# print('update_period: ',update_period)
 
 
 # lists for storing data about accuracy and loss:
 history = {
     'train' : {
-                'memory' : {'acc' : [], 'loss':[]},                 
+                'memory' : {'acc' : [], 'loss':[]},         # lists are of the form: [(epoch, score) ...]            
                 'no_memory' : {'acc' : [], 'loss' : []}
             }, 
     'valid' : {
@@ -136,32 +136,30 @@ for epoch in range(epochs):
         tmp_loss.append(train_loss)
 
     # compute training accuracy and loss
-    train_acc = np.mean(tmp_acc))
-    train_loss = np.mean(tmp_loss))
+    train_acc = np.mean(tmp_acc)
+    train_loss = np.mean(tmp_loss)
+    history['train']['no_memory']['acc'].append( (epoch, train_acc) )
+    history['train']['no_memory']['loss'].append( (epoch, train_loss) )
 
     # compute validation accuracy and loss
-    valid_acc, valid_cost = session.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
+    valid_acc, valid_loss = session.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
+    history['valid']['no_memory']['acc'].append( (epoch, valid_acc) )
+    history['valid']['no_memory']['loss'].append( (epoch, valid_loss) )
 
     # compute validation accuracy when using memory
-    if epoch % validation_freq == 0:
+    if epoch % validation_freq == 0 or epoch == epochs-1:
         yhats = predict(x_val, sess)
         mem_val_acc = sess.run(accuracy_mem, feed_dict={y: y_val, yhat_placeholder : yhats})
-        history['valid']['memory']['acc']
+        history['valid']['memory']['acc'].append( (epoch, mem_val_acc) )
 
     print('Epoch {:>2}:\t'.format(epoch + 1), end='')
-    print('Accuracy: {:.6f} \t Cost: {:.6f}'.format(train_acc, train_cost), '\t' + 'Validation Accuracy: {:.6f} \t Cost: {:.6f}'.format(valid_acc, valid_cost))
+    print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss), end='')
+    if epoch % validation_freq == 0 or epoch == epochs-1:
+        print('memory val_acc: {:.4f}'.format(mem_val_acc)) 
+    else:
+        print('\n')
 
 
-history = {
-    'train' : {
-                'memory' : {'acc' : [], 'loss':[]},                 
-                'no_memory' : {'acc' : [], 'loss' : []}
-            }, 
-    'valid' : {
-                'memory' : {'acc' : [], 'loss':[]}, 
-                'no_memory' : {'acc' : [], 'loss' : []}
-            }
-}
 
 
 
