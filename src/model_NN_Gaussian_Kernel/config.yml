@@ -7,17 +7,3 @@ update_period:
   - 10
 
 
-
-
-
-epochs = 100
-batch_size = 64
-keep_probability = 0.25 #dropout parameter
-lr = 0.0001
-embedding_dim = 100
-n_output = num_classes= 10
-bandwidth = 0.01 #bandwidth
-dataset = 'cifar10'
-split_ratio = 0.1
-update_period = 10
-nearest_neighbors = 50

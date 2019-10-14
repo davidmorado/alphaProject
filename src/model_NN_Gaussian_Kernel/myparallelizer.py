@@ -13,6 +13,13 @@ for f in folders:
     except OSError:
         pass
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--platform", type=str)
+args = parser.parse_args()
+platform = args.platform
+
+
+
 
 with open("config.yml", 'r') as stream:
     try:
@@ -22,10 +29,16 @@ with open("config.yml", 'r') as stream:
 
 params_grid = ParameterGrid(hp_dict)
 
-for combination in params_grid:
-	#subprocess.call(['sbatch template.sh'] + ['--' + str(param) + ' ' + str(value) for param, value in combination.items()]])
-	combination = str(combination)
-	os.system(F"sbatch template.sh {combination}")
-    
+for i, combination in enumerate(params_grid):
+    #subprocess.call(['sbatch template.sh'] + ['--' + str(param) + ' ' + str(value) for param, value in combination.items()]])
+    combination = F"{combination}".replace(' ', '')#.replace('\'', '')
+    print(combination)
+    if platform == 'slurm':
+	    os.system(F"sbatch template.sh {combination}")
+    elif platform == 'local':
+        print(i)
+        os.system(F'template_python.sh "{combination}" {i}')
+    else:
+        raise('Platform (--platform) must be specified as one of (slurm, local)')
 
 

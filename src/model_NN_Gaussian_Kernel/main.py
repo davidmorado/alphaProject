@@ -131,15 +131,19 @@ n_output = num_classes= 10
 bandwidth = 0.01 #bandwidth
 dataset = 'cifar10'
 split_ratio = 0.1
-update_period = 10
-nearest_neighbors = 50
+# update_period = 10
+# nearest_neighbors = 50
 
 # read hyperparameters from command line arguments and overwrite default ones
 hp_dict_str = sys.argv[1]
-hp_dict = ast.literal_eval(hp_dict_str)
+import yaml
+hp_dict = yaml.load(hp_dict_str)
+
+#hp_dict = ast.literal_eval(hp_dict_str)
 for key,val in hp_dict.items():
     exec(key + '=val')
-
+print('nearest_neighbors: ',nearest_neighbors)
+print('update_period: ',update_period)
 
 
 #(x_train, y_train), (x_val, y_val) = cifar10.load_data()

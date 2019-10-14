@@ -11,4 +11,4 @@
 source activate GPU
 
 ## Run the script
-srun python main.py $1 $2
+srun python main.py $1
