@@ -3,9 +3,11 @@
 *.pyc
 storage
 data
-*log*
-gridresults
-
+**/logs
+**/gridresults
+**/plots
+**/tb_logs
+**/errs
 
 ### Environments ###
 .env
