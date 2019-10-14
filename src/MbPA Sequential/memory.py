@@ -7,12 +7,12 @@ import tensorflow as tf
 
 class Memory():
 
-    def __init__(self, model, session, embeddingsize=50, batch_size=128, capacity_multiplier=10, target_size=10, K=20):
+    def __init__(self, model, session, embedding_size=100, batch_size=128, capacity_multiplier=10, target_size=10, K=20):
         self.batch_size = batch_size
         self.capacity = batch_size * capacity_multiplier
-        self.embeddingsize = embeddingsize
+        self.embedding_size = embedding_size
         self.target_size = target_size
-        self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embeddingsize], dtype=tf.float32), dtype=tf.float32,  name='KEYS', trainable=False)
+        self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embedding_size], dtype=tf.float32), dtype=tf.float32,  name='KEYS', trainable=False)
         self.Values = tf.Variable(tf.zeros([self.capacity, self.target_size], dtype=tf.float32), dtype=tf.float32, name='VALUES', trainable=False)
         self.K = tf.constant(K)
         self.pointer = 0
@@ -37,7 +37,7 @@ class Memory():
 
 
     def write(self, h, values):
-        # h: shape = (batch_size, embeddingsize) 
+        # h: shape = (batch_size, embedding_size) 
         # values: shape = (batch_size, target_size)
         # we assume, capacity is a multiple of batch-size!!!!
 
@@ -56,16 +56,16 @@ class Memory():
 
     def read(self, h):
 
-        # keys: [capacity x embeddingsize] -> [1 x capacity x embeddingsize]
+        # keys: [capacity x embedding_size] -> [1 x capacity x embedding_size]
         expanded_keys = tf.expand_dims(self.Keys, axis=0) 
 
-        # h: [batchsize x embeddingsize] -> [batchsize x 1 x embeddingsize]
+        # h: [batchsize x embedding_size] -> [batchsize x 1 x embedding_size]
         expanded_h = tf.expand_dims(h, axis=1)
 
-        # h: [batchsize x 1 x embeddingsize] -> [batchsize x capacity x embeddingsize]
+        # h: [batchsize x 1 x embedding_size] -> [batchsize x capacity x embedding_size]
         tiled_eh = tf.tile(expanded_h, [1, self.capacity, 1])
 
-        # keys - h: [batchsize x capacity x embeddingsize]
+        # keys - h: [batchsize x capacity x embedding_size]
         diff = expanded_keys - tiled_eh
 
         # distances: [batchsize x capacity]
@@ -79,7 +79,7 @@ class Memory():
         _, indices = tf.nn.top_k(-distances, k=self.K)
 
         # lookup of 
-        # hit_keys: [K x embeddingsize]
+        # hit_keys: [K x embedding_size]
         # hit_values: [K x targetsize]
         hit_keys = tf.nn.embedding_lookup(self.Keys, indices)
         hit_values = tf.nn.embedding_lookup(self.Values, indices)
@@ -89,18 +89,18 @@ class Memory():
         return hit_keys, hit_values, weights
 
     def sq_distance(self, A, B):
-        # A = hit_keys: [batchsize x K x embeddingsize]
-        # B = h: [batchsize x embeddingsize]
+        # A = hit_keys: [batchsize x K x embedding_size]
+        # B = h: [batchsize x embedding_size]
         # computes ||A||^2 - 2*||AB|| + ||B||^2 = A.TA - 2 A.T B + B.T B
         row_norms_A = tf.reduce_sum(tf.square(A), axis=2)
         row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
         row_norms_B = tf.reshape(row_norms_B, [-1, 1])
-        # B: [batchsize x embeddingsize x 1]
+        # B: [batchsize x embedding_size x 1]
         B = tf.expand_dims(B, axis=2)
-        # B: [batchsize x embeddingsize x K]
+        # B: [batchsize x embedding_size x K]
         B = tf.tile(B, [1, 1, self.K])
         # https://stackoverflow.com/questions/38235555/tensorflow-matmul-of-input-matrix-with-batch-data
-        # AB = [batchsize x K x embeddingsize] @ [batchsize x embeddingsize x K] 
+        # AB = [batchsize x K x embedding_size] @ [batchsize x embedding_size x K] 
         # -> [batchsize x K x K] (duplicated on axis 2)
         AB = tf.matmul(A, B) 
         # AB -> [batchsize x K]
@@ -115,7 +115,7 @@ class Memory():
         return weights # weight matrix: [batchsize x K]
 
     def adapt_predict(self, h, niters=3, lr=0.001):
-        # h: [1 x embeddingsize]
+        # h: [1 x embedding_size]
         # niters: [1]
 
         keys, values, weights = self.read(h)

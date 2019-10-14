@@ -15,8 +15,12 @@ from data_loader import get_dataset
 epochs = 100
 batch_size = 32
 learning_rate = 0.001
+embedding_size = 100
 nearest_neighbors = 50
 validation_freq = 10
+dataset = 'cifar10'
+split_ratio = 0.15
+n_output = num_classes= 10
 
 
 # read hyperparameters from command line arguments and overwrite default ones
@@ -48,14 +52,12 @@ history = {
 # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio)
 
-input_shape = x_train.shape[1:]
-num_classes = np.max(y_val)+1
-num_samples = x_train.shape[0]
 
-x_train = x_train/255
-x_val = x_val/255
-y_train = to_categorical(y_train, num_classes)
-y_val = to_categorical(y_val, num_classes)
+
+# x_train = x_train/255
+# x_val = x_val/255
+# y_train = to_categorical(y_train, num_classes)
+# y_val = to_categorical(y_val, num_classes)
 
 x_train = x_train[:500].astype(np.float32)
 y_train = y_train[:500].astype(np.float32)
@@ -70,16 +72,16 @@ tf.reset_default_graph()
 
 # Inputs
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
-y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
+y = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
 
 
 # start tf session
 sess = tf.Session()
 
 # build network with memory
-M = Memory(SecondStage(), batch_size=batch_size, session=sess)
+M = Memory(SecondStage(embedding_size=embedding_size, target_size=num_classes), embedding_size=embedding_size, batch_size=batch_size, session=sess)
 M.initialize()
-embeddings = conv_netV2(x)
+embeddings = conv_netV2(x, embedding_size=embedding_size)
 logits = M.model(embeddings)
 
 # Loss and Optimizer
@@ -94,9 +96,9 @@ correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
 # accuracy when memroy is used
-yhat_placeholder = tf.placeholder(tf.float32, shape=(None, 10), name='yhat_placeholder')
-correct_pred_mem = tf.equal(tf.argmax(np.squeeze(np.array(yhat_placeholder), axis=1), 1), tf.argmax(y, 1))
-accuracy_mem = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy_memory')
+yhat_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='yhat_placeholder')
+correct_pred_mem = tf.equal(tf.argmax(yhat_placeholder, 1), tf.argmax(y, 1))
+accuracy_mem = tf.reduce_mean(tf.cast(correct_pred_mem, tf.float32), name='accuracy_memory')
 
 # print(sess.run(accuracy, feed_dict={y: y_val}))
 
@@ -106,7 +108,8 @@ def predict(x_, tfsession):
 
     hs_ = tfsession.run(embeddings, feed_dict={x:x_})
     yhats = M.predict(hs_)
-    return tfsession.run(yhats, feed_dict={x:x_})
+    r =  tfsession.run(yhats, feed_dict={x:x_})
+    return np.squeeze(np.array(r), axis=1)
 
 def training_step(session, optimizer, batch_features, batch_labels):
     _, h = session.run([optimizer, embeddings], feed_dict={x : batch_features, y : batch_labels})
@@ -131,7 +134,7 @@ for epoch in range(epochs):
         M.write(hs, batch_Y)
 
         # gather loss and accuracy on batch:
-        train_acc, train_loss = session.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
+        train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
         tmp_acc.append(train_acc)
         tmp_loss.append(train_loss)
 
@@ -142,22 +145,26 @@ for epoch in range(epochs):
     history['train']['no_memory']['loss'].append( (epoch, train_loss) )
 
     # compute validation accuracy and loss
-    valid_acc, valid_loss = session.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
+    valid_acc, valid_loss = sess.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
     history['valid']['no_memory']['acc'].append( (epoch, valid_acc) )
     history['valid']['no_memory']['loss'].append( (epoch, valid_loss) )
 
     # compute validation accuracy when using memory
     if epoch % validation_freq == 0 or epoch == epochs-1:
+        # print(M.Keys)
+        # print('before predicting: ', sess.run(M.Keys))
         yhats = predict(x_val, sess)
+        # print(M.Keys)
+        # print('after predicting: ', sess.run(M.Keys))
         mem_val_acc = sess.run(accuracy_mem, feed_dict={y: y_val, yhat_placeholder : yhats})
         history['valid']['memory']['acc'].append( (epoch, mem_val_acc) )
 
     print('Epoch {:>2}:\t'.format(epoch + 1), end='')
     print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss), end='')
     if epoch % validation_freq == 0 or epoch == epochs-1:
-        print('memory val_acc: {:.4f}'.format(mem_val_acc)) 
+        print('\t memory val_acc: {:.4f}'.format(mem_val_acc)) 
     else:
-        print('\n')
+        print()
 
 
 
@@ -172,7 +179,8 @@ yhats = predict(x_val, sess)
 print(M.Keys)
 print('after predicting: ', sess.run(M.Keys))
 
-
+correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy_memory')
 print(sess.run(accuracy, feed_dict={y: y_val}))
 
 # close tf session

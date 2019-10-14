@@ -65,7 +65,7 @@ def conv_net(x, embedding_size=50):
 
 
 
-def conv_netV2(x, embedding_size=50):
+def conv_netV2(x, embedding_size=100):
     conv1_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 3, 32], mean=0, stddev=0.1))
     conv1_filter2 = tf.Variable(tf.truncated_normal(shape=[3, 3, 32, 32], mean=0, stddev=0.1))
 
@@ -127,7 +127,7 @@ class SecondStage():
                 
 
         with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
-            self.h = tf.placeholder(tf.float32, shape=(None, self.embedding_size), name='h')
+            # self.h = tf.placeholder(tf.float32, shape=(None, self.embedding_size), name='h')
             self.full1 = lambda h:tf.contrib.layers.fully_connected(inputs=h, num_outputs=int(self.embedding_size/2), activation_fn=tf.nn.relu)
             self.logits = lambda full1: tf.contrib.layers.fully_connected(inputs=full1, num_outputs=target_size, activation_fn=None)
         
@@ -135,7 +135,7 @@ class SecondStage():
     def __call__(self, h):
         if self.session is None:
             raise('No session assigned to instance of SecondStage')
-
+        
         #return self.session.run(self.logits, feed_dict={self.h : h})
         with tf.variable_scope('SECOND_STAGE', reuse=tf.AUTO_REUSE):
             return self.logits(self.full1(h))
