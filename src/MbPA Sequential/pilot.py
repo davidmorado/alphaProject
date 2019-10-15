@@ -62,6 +62,10 @@ history = {
 # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
 
+x_train = np.concatenate([x_train, x_val], axis=0)
+y_train = np.concatenate([y_train, y_val], axis=0)
+x_val = x_test.copy() 
+y_val = y_test.copy()
 
 
 # x_train = x_train/255
@@ -73,6 +77,9 @@ x_train = x_train[:500].astype(np.float32)
 y_train = y_train[:500].astype(np.float32)
 x_val = x_val[:100].astype(np.float32)
 y_val = y_val[:100].astype(np.float32)
+
+
+
 
 # x_train = tf.random.shuffle(x_train,seed=1)
 # y_train = tf.random.shuffle(y_train, seed=1)
@@ -136,19 +143,28 @@ sess.run(tf.global_variables_initializer())
 for epoch in range(epochs):
     # Loop over all batches
     minibatches = random_mini_batches(x_train, y_train, batch_size, 1)
-    minibatches = minibatches[:-1]
+    # minibatches = minibatches[:-1]
     tmp_loss, tmp_acc = [], []
+    hs_, y_ = [], []
     for i, minibatch in enumerate(minibatches):
         batch_X, batch_Y = minibatch
 
         # training step and append to memroy
         hs = training_step(sess, train_op, batch_X, batch_Y)
-        M.write(hs, batch_Y)
+        if i == 0:
+            hs_ = hs
+            y_ = batch_Y
+        else:
+            hs_ = tf.concat([hs_, hs], axis=0)
+            y_ = tf.concat([y_, batch_Y], axis=0)
 
         # gather loss and accuracy on batch:
         train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
         tmp_acc.append(train_acc)
         tmp_loss.append(train_loss)
+
+    # update memory
+    M.write(hs_, y_) 
 
     # compute training accuracy and loss
     train_acc = np.mean(tmp_acc)
