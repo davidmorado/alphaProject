@@ -148,7 +148,7 @@ print('update_period: ',update_period)
 
 
 #(x_train, y_train), (x_val, y_val) = cifar10.load_data()
-x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio)
+x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio, normalize=True)
 
 
 print("Train size:", x_train.shape)
