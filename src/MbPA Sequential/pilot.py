@@ -89,7 +89,9 @@ y = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
 sess = tf.Session()
 
 # build network with memory
-M = Memory(SecondStage(embedding_size=embedding_size, target_size=num_classes), embedding_size=embedding_size, batch_size=batch_size, session=sess)
+M = Memory(SecondStage(embedding_size=embedding_size, target_size=num_classes), 
+            embedding_size=embedding_size, batch_size=batch_size, session=sess,
+            capacity_multiplier=100, target_size=num_classes, K=nearest_neighbors)
 M.initialize()
 embeddings = conv_netV2(x, embedding_size=embedding_size)
 logits = M.model(embeddings)

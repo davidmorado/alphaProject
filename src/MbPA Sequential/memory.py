@@ -7,7 +7,7 @@ import tensorflow as tf
 
 class Memory():
 
-    def __init__(self, model, session, embedding_size=100, batch_size=128, capacity_multiplier=10, target_size=10, K=20):
+    def __init__(self, model, session, embedding_size=100, batch_size=128, capacity_multiplier=100, target_size=10, K=50):
         self.batch_size = batch_size
         self.capacity = batch_size * capacity_multiplier
         self.embedding_size = embedding_size
