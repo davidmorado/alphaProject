@@ -1,18 +1,15 @@
 import tensorflow as tf 
-from model import conv_net, conv_netV2, secondStage, SecondStage
 
-import objgraph
-import gc 
+
+
+
 
 
 class Memory():
 
-    def __init__(self, session, embedding_size=100, size=10000, target_size=10, K=50):
-        if size < 0:
-            raise('Size must be > 0!')
-        if K > size:
-            raise('Nearest neighbor parameter (K) must be smaller than memory size')
-        self.capacity = size
+    def __init__(self, model, session, embedding_size=100, batch_size=128, capacity_multiplier=100, target_size=10, K=50):
+        self.batch_size = batch_size
+        self.capacity = batch_size * capacity_multiplier
         self.embedding_size = embedding_size
         self.target_size = target_size
         self.Keys   = tf.Variable(tf.zeros([self.capacity, self.embedding_size], dtype=tf.float32), dtype=tf.float32,  name='KEYS', trainable=False)
@@ -20,7 +17,7 @@ class Memory():
         self.K = tf.constant(K)
         self.pointer = 0
         self.train_mode = True
-        self.model = SecondStage(embedding_size=embedding_size, target_size=target_size)
+        self.model = model
     
         self.session = session
         
@@ -28,18 +25,15 @@ class Memory():
     def initialize(self):
         self.model.set_session(self.session)
 
+        
+
+        #collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
 
     def training(self):
         self.train_mode = True 
 
     def eval(self):
         self.train_mode = False
-
-    def free_space(self):
-        return self.capacity - self.pointer
-
-    def fit_into_memory(self, h):
-        return h.shape[0] <= self.free_space()
 
 
     def write(self, h, values):
@@ -50,36 +44,36 @@ class Memory():
         if self.pointer >= self.capacity:
             self.pointer = 0
             #print('reset pointer')
-        # 1) if batch_size < free_space:
-                # - end recursion
-                # - fill free_space
-        # 2) if batch_size > free_space:
-                # - fill free_space
-                # - recursive call: write(rest of h, rest of values)
+        print(h.shape, values.shape)
+        if self.capacity < h.shape[0]:
+            if self.pointer+h.shape[0] <= self.capacity:
+                indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
+                self.session.run(tf.variables_initializer(var_list=[indices]))
+                self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
+                self.Values = tf.scatter_update(self.Values, indices, updates=values)
+                self.pointer += h.shape[0]
+            else:
+                # first step: write until end of dictionary:
+                indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity))
+                h_tmp = h[:self.capacity - self.pointer]
+                values_tmp = values[:self.capacity - self.pointer]
+                self.session.run(tf.variables_initializer(var_list=[indices]))
+                self.Keys = tf.scatter_update(self.Keys, indices, updates=h_tmp)
+                self.Values = tf.scatter_update(self.Values, indices, updates=values_tmp)
+                # compute number of instances to write (h.shape[0] - (capacity - pointer))
+                offset = h.shape[0] - (capacity - pointer)
+                self.pointer = 0
 
-        if self.fit_into_memory(h):
-            # end recursion:
-            indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
-            self.session.run(tf.variables_initializer(var_list=[indices]))
-            self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
-            self.Values = tf.scatter_update(self.Values, indices, updates=values)
-            self.pointer += h.shape[0]
+                # write other instances
+                indices = tf.Variable(tf.range(start=self.pointer, limit=offset))
+                h_tmp = h[offset:]
+                values_tmp = values[offset:]
+                self.session.run(tf.variables_initializer(var_list=[indices]))
+                self.Keys = tf.scatter_update(self.Keys, indices, updates=h_tmp)
+                self.Values = tf.scatter_update(self.Values, indices, updates=values_tmp)
+                self.pointer += offset
 
-        else: # does not fit into memory
-            indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity)) # tf.range does not include limit
-            self.session.run(tf.variables_initializer(var_list=[indices]))
-            free_space = self.free_space()
-            offset = h.shape[0] - free_space
-            h_tmp = h[:free_space]
-            values_tmp = values[:free_space]
-            print('partial h: ', h_tmp.shape, 'left_over: ', offset)
-            self.Keys = tf.scatter_update(self.Keys, indices, updates=h_tmp)
-            self.Values = tf.scatter_update(self.Values, indices, updates=values_tmp)
-            self.pointer = 0
-
-            # recursive call
-            self.write(h[free_space:], values[free_space:])
-    
+        #print(self.session.run(self.Keys))
 
     def read(self, h):
 
@@ -144,7 +138,7 @@ class Memory():
     def adapt_predict(self, h, niters=3, lr=0.001):
         # h: [1 x embedding_size]
         # niters: [1]
-        
+
         keys, values, weights = self.read(h)
     
         collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
@@ -173,21 +167,19 @@ class Memory():
         tmp = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'SECOND_STAGE')
         for i in range(len(tmp)):
             tmp[i]= tmp[i].assign(original_weights[i])
-        del original_weights
-        del weights_to_adapt
+
         return yhat
 
 
 
     def predict(self, hs):
-        objgraph.show_most_common_types(limit=50)
         yhats = []
         #print('predicting')
         for h in tf.unstack(hs, axis=0):
             h = tf.expand_dims(h, axis=0)
             prediction = self.adapt_predict(h)
             yhats.append(prediction)
-        gc.collect()
+
         return yhats
 
 
@@ -202,7 +194,21 @@ class Memory():
 
 
 
+    def write(self, h, values):
+        # h: shape = (batch_size, embedding_size) 
+        # values: shape = (batch_size, target_size)
+        # we assume, capacity is a multiple of batch-size!!!!
 
+        if self.pointer >= self.capacity:
+            self.pointer = 0
+            #print('reset pointer')
+
+        indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+self.batch_size))
+        self.session.run(tf.variables_initializer(var_list=[indices]))
+        self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
+        self.Values = tf.scatter_update(self.Values, indices, updates=values)
+
+        self.pointer += self.batch_size
 
 
 

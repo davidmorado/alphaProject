@@ -11,16 +11,19 @@ import sys
 from random_mini_batches import random_mini_batches
 from data_loader import get_dataset
 
+import objgraph
+
 # hyperparameters
 epochs = 100
 batch_size = 32
 learning_rate = 0.001
 embedding_size = 100
-nearest_neighbors = 50
+nearest_neighbors = 3
 validation_freq = 10
 dataset = 'cifar10'
 split_ratio = 0.1
 n_output = num_classes= 10
+memory_size = 1000
 
 
 import os
@@ -64,8 +67,8 @@ x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=spli
 
 x_train = np.concatenate([x_train, x_val], axis=0)
 y_train = np.concatenate([y_train, y_val], axis=0)
-x_val = x_test.copy() 
-y_val = y_test.copy()
+x_val = x_test
+y_val = y_test
 
 
 # x_train = x_train/255
@@ -96,9 +99,8 @@ y = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
 sess = tf.Session()
 
 # build network with memory
-M = Memory(SecondStage(embedding_size=embedding_size, target_size=num_classes), 
-            embedding_size=embedding_size, batch_size=batch_size, session=sess,
-            capacity_multiplier=100, target_size=num_classes, K=nearest_neighbors)
+M = Memory(embedding_size=embedding_size, size=memory_size, session=sess, target_size=num_classes, K=nearest_neighbors)
+            
 M.initialize()
 embeddings = conv_netV2(x, embedding_size=embedding_size)
 logits = M.model(embeddings)
@@ -141,6 +143,7 @@ sess.run(tf.global_variables_initializer())
 
 # Training cycle
 for epoch in range(epochs):
+    
     # Loop over all batches
     minibatches = random_mini_batches(x_train, y_train, batch_size, 1)
     # minibatches = minibatches[:-1]
@@ -155,9 +158,9 @@ for epoch in range(epochs):
             hs_ = hs
             y_ = batch_Y
         else:
-            hs_ = tf.concat([hs_, hs], axis=0)
-            y_ = tf.concat([y_, batch_Y], axis=0)
-
+            hs_ = np.concatenate([hs_, hs], axis=0)
+            y_ = np.concatenate([y_, batch_Y], axis=0)
+        
         # gather loss and accuracy on batch:
         train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
         tmp_acc.append(train_acc)

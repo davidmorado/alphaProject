@@ -173,7 +173,37 @@ class Memory():
 
 
 
+    def write(self, h, values):
+        # h: shape = (batch_size, embedding_size) 
+        # values: shape = (batch_size, target_size)
+        # we assume, capacity is a multiple of batch-size!!!!
+        
+        if self.pointer >= self.capacity:
+            self.pointer = 0
+            #print('reset pointer')
+        print(h.shape, values.shape)
+        if self.pointer+h.shape[0] <= self.capacity:
+            indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
+            self.session.run(tf.variables_initializer(var_list=[indices]))
+            self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
+            self.Values = tf.scatter_update(self.Values, indices, updates=values)
+            self.pointer += h.shape[0]
+        else:
+            # first step: write until end of dictionary:
+            indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity))
+            self.session.run(tf.variables_initializer(var_list=[indices]))
+            self.Keys = tf.scatter_update(self.Keys, indices, updates=h[:self.capacity - self.pointer])
+            self.Values = tf.scatter_update(self.Values, indices, updates=values)
+            # compute number of instances to write (h.shape[0] - (capacity - pointer))
+            offset = h.shape[0] - (capacity - pointer)
+            self.pointer = 0
 
+            # write other instances
+            indices = tf.Variable(tf.range(start=self.pointer, limit=offset))
+            self.session.run(tf.variables_initializer(var_list=[indices]))
+            self.Keys = tf.scatter_update(self.Keys, indices, updates=h[offset:])
+            self.Values = tf.scatter_update(self.Values, indices, updates=values)
+            self.pointer += offset
 
 
 
