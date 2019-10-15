@@ -24,8 +24,8 @@ input_shape = x_train.shape[1:]
 print('Data has been loaded successfully!')
 
 # Hyperparameters:
-batch_size = 2
-epochs = 1
+batch_size = 64
+epochs = 500
 learning_rate = 0.001
 embedding_dim = 100
 
