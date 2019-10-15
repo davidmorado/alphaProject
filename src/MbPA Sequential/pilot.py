@@ -19,8 +19,18 @@ embedding_size = 100
 nearest_neighbors = 50
 validation_freq = 10
 dataset = 'cifar10'
-split_ratio = 0.15
+split_ratio = 0.1
 n_output = num_classes= 10
+
+
+import os
+# creates folders
+folders = ['models', 'gridresults', 'plots', 'tb_logs', 'errs', 'logs']
+for f in folders:
+    try:
+        os.makedirs(f)
+    except OSError:
+        pass
 
 
 # read hyperparameters from command line arguments and overwrite default ones
@@ -50,7 +60,7 @@ history = {
 
 # Data Loading and Preprocessing
 # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio)
+x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
 
 
 
@@ -150,7 +160,7 @@ for epoch in range(epochs):
     history['valid']['no_memory']['loss'].append( (epoch, valid_loss) )
 
     # compute validation accuracy when using memory
-    if epoch % validation_freq == 0 or epoch == epochs-1:
+    if(epoch+1) % validation_freq == 0 or epoch == epochs-1:
         # print(M.Keys)
         # print('before predicting: ', sess.run(M.Keys))
         yhats = predict(x_val, sess)
@@ -161,7 +171,7 @@ for epoch in range(epochs):
 
     print('Epoch {:>2}:\t'.format(epoch + 1), end='')
     print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss), end='')
-    if epoch % validation_freq == 0 or epoch == epochs-1:
+    if (epoch+1) % validation_freq == 0 or epoch == epochs-1:
         print('\t memory val_acc: {:.4f}'.format(mem_val_acc)) 
     else:
         print()
@@ -182,6 +192,15 @@ print('after predicting: ', sess.run(M.Keys))
 correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy_memory')
 print(sess.run(accuracy, feed_dict={y: y_val}))
+
+
+modelpath = 'mbpa'
+
+out_results = history
+filename = F"gridresults/{modelpath}.pkl"
+with open(filename, 'wb') as f:
+  pickle.dump(out_results, f)
+
 
 # close tf session
 sess.close()
