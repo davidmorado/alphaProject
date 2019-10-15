@@ -79,20 +79,19 @@ with tf.Session() as sess:
         for bidx in batch_idxs:
 
             # train
-            print(bidx)
-            print(len(bidx))
-
             sess.run(optimizer, feed_dict = {x: x_train[bidx], y: y_train[bidx]})
 
             print('Training step taken.')
 
             # get accuracy
-            train_acc = sess.run(accuracy, feed_dict = {x: x_train, y: y_train})
+            # train_acc = sess.run(accuracy, feed_dict = {x: x_train, y: y_train})
+            train_acc = 'OOM'
             val_acc = sess.run(accuracy, feed_dict = {x: x_val, y: y_val})
             test_acc = sess.run(accuracy, feed_dict = {x: x_test, y: y_test})
 
             # get loss
-            train_loss = sess.run(cost, feed_dict = {x: x_train, y: y_train})
+            # train_loss = sess.run(cost, feed_dict = {x: x_train, y: y_train})
+            train_loss = 'OOM'
             val_loss = sess.run(cost, feed_dict = {x: x_val, y: y_val})
             test_loss = sess.run(cost, feed_dict = {x: x_test, y: y_test})
 
