@@ -79,6 +79,9 @@ with tf.Session() as sess:
         for bidx in batch_idxs:
 
             # train
+            print(bidx)
+            print(len(bidx))
+
             sess.run(optimizer, feed_dict = {x: x_train[bidx], y: y_train[bidx]})
 
             print('Training step taken.')
