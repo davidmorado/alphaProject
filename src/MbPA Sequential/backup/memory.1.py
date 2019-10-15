@@ -59,17 +59,15 @@ class Memory():
 
         if self.fit_into_memory(h):
             # end recursion:
-            # indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
-            indices = tf.range(start=self.pointer, limit=self.pointer+h.shape[0])
-            #self.session.run(tf.variables_initializer(var_list=[indices]))
+            indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
+            self.session.run(tf.variables_initializer(var_list=[indices]))
             self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
             self.Values = tf.scatter_update(self.Values, indices, updates=values)
             self.pointer += h.shape[0]
 
         else: # does not fit into memory
-            # indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity)) # tf.range does not include limit
-            indices = tf.range(start=self.pointer, limit=self.capacity)
-            #self.session.run(tf.variables_initializer(var_list=[indices]))
+            indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity)) # tf.range does not include limit
+            self.session.run(tf.variables_initializer(var_list=[indices]))
             free_space = self.free_space()
             offset = h.shape[0] - free_space
             h_tmp = h[:free_space]

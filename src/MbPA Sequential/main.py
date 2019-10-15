@@ -128,7 +128,6 @@ keep_probability = 0.25 #dropout parameter
 lr = 0.0001
 embedding_dim = 100
 n_output = num_classes= 10
-num_keys_per_class= 1000
 bandwidth = 0.01 #bandwidth
 dataset = 'cifar10'
 split_ratio = 0.1
@@ -148,7 +147,7 @@ print('update_period: ',update_period)
 
 
 #(x_train, y_train), (x_val, y_val) = cifar10.load_data()
-x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio, normalize=True)
+x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, split_ratio)
 
 
 print("Train size:", x_train.shape)
@@ -158,9 +157,6 @@ print("Test size:", x_val.shape)
 
 
 tf.reset_default_graph()
-
-values = np.vstack([np.eye(num_classes)]*num_keys_per_class)
-n_keys= values.shape[0]
 
 #initializing placeholders
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
