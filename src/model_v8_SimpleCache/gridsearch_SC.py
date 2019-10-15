@@ -49,9 +49,12 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
 
 print('Graph has been created!')
 
-cfg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-tg = [10, 20, 30, 40, 50, 60, 70, 80, 90]
-lg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+# cfg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+# tg = [10, 20, 30, 40, 50, 60, 70, 80, 90]
+# lg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+cfg = [0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+tg = [10, 30, 50, 70, 90]
+lg = [0.1, 0.3, 0.5, 0.7, 0.9]
 metrics = ['train_acc', 'val_acc', 'test_acc', 'train_loss', 'val_loss', 'test_loss', 
             'mem_acc_val', 'comb_acc_val', 'mem_acc_test', 'comb_acc_test']
 
@@ -105,7 +108,7 @@ with tf.Session() as sess:
                         for m in metrics:
                             metrics_dict[(cf, t, l)][m].append(eval(m))
             
-            with open('results.pickle', 'wb') as f:
+            with open('results2.pickle', 'wb') as f:
                 pickle.dump(metrics_dict, f)
 
             print('Memory Metrics recorded and all metrics saved.')
