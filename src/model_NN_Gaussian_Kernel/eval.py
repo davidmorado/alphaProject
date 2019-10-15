@@ -23,6 +23,8 @@ plt.clf()
 
 with open(result_path + BEST_result, 'rb') as f:
     hp_dict, acc_train_list, acc_validation_list = pickle.load(f)
+    print(hp_dict)
+    print('final test accuracy: ', acc_validation_list[-1])
     plt.plot(acc_train_list, label=F"updatePeriod={hp_dict['update_period']}, nn={hp_dict['nearest_neighbors']}, test_accuracy: {acc_validation_list[-1]:.4f}", color='blue')
     plt.plot(acc_validation_list, 'k--', color='blue')
     plt.legend()
