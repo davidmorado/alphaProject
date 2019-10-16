@@ -92,7 +92,7 @@ for cf in cfg:
             print(metrics_dict[(cf, t, l)]['comb_acc_val'][-1])
             print(best_acc)
             if metrics_dict[(cf, t, l)]['comb_acc_val'][-1] > best_acc:
-                best_acc = metrics_dict[(cf, t, l)]['comb_acc_val']
+                best_acc = metrics_dict[(cf, t, l)]['comb_acc_val'][-1]
                 best_HP = (cf, t, l)
                 print(best_HP)
 
