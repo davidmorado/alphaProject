@@ -109,7 +109,6 @@ with tf.Session() as sess:
                         print((cf, t, l))
                         for m in metrics:
                             metrics_dict[(cf, t, l)][m].append(eval(m))
-                            print(m)
                             
 
             
