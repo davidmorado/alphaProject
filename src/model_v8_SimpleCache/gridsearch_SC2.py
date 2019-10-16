@@ -44,6 +44,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer = keras.optimizers.Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
                 metrics=['accuracy'])
 end = time()
+print('helloooo')
 print(end-start)
 sys.exit()
 
