@@ -76,6 +76,8 @@ for cf in cfg:
 
 best_HP = ()
 best_acc = 0
+counter = 1
+maxcounter = len(cfg)*len(tg)*len(lg)*len(metrics)
 for cf in cfg:
     for t in tg:
         for l in lg:
@@ -85,9 +87,11 @@ for cf in cfg:
                 mem_acc_val, comb_acc_val= (0, 0)
             for m in metrics:
                 metrics_dict[(cf, t, l)][m].append(eval(m))
+                print(counter/maxcounter)
             if metrics_dict[(cf, t, l)]['comb_acc_val'][-1] > best_acc:
                 best_acc = metrics_dict[(cf, t, l)]['comb_acc_val']
                 best_HP = (cf, t, l)
+                print(best_HP)
 
 with open('metrics_dict.pickle', 'wb') as f:
     pickle.dump(metrics_dict, f)
@@ -131,6 +135,8 @@ with tf.Session() as sess:
             # train
             sess.run(optimizer, feed_dict = {x: x_train_val[bidx], y: x_train_val[bidx]})
         print(F'epoch: {epoch}/{epochs}')
+
+        print('Recording Metrics.')
 
         # get accuracy
         train_acc = sess.run(accuracy, feed_dict = {x: x_train[:10000], y: y_train[:10000]})
