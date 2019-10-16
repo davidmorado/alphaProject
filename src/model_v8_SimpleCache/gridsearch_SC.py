@@ -105,8 +105,13 @@ with tf.Session() as sess:
                             mem_acc_test, comb_acc_test = memory_predictions(model, x_train, x_test, y_train, y_test, num_categories, cf, t, l)
                         except:
                             mem_acc_val, comb_acc_val, mem_acc_test, comb_acc_test = ('OF', 'OF', 'OF', 'OF')
+                        print('Recoreded:')
+                        print((cf, t, l))
                         for m in metrics:
                             metrics_dict[(cf, t, l)][m].append(eval(m))
+                            print(m)
+                            
+
             
             with open('results2.pickle', 'wb') as f:
                 pickle.dump(metrics_dict, f)
