@@ -81,7 +81,7 @@ with tf.Session() as sess:
             counter+=1
             # train
             sess.run(optimizer, feed_dict = {x: x_train[bidx], y: y_train[bidx]})
-            print('epoch: {epoch}/{epochs}\t training_step: {counter}/{len(batch_idxs)}')
+            print(F'epoch: {epoch}/{epochs}\t training_step: {counter}/{len(batch_idxs)}')
 
 
         # get accuracy
