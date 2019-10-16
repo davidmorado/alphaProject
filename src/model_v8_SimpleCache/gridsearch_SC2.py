@@ -9,7 +9,6 @@ import keras
 from keras import Model
 from memory_predictions import memory_predictions
 import pickle
-import pdb
 
 # creates folders
 folders = ['models', 'gridresults', 'tb_logs', 'errs', 'logs']
@@ -27,7 +26,7 @@ print('Data has been loaded successfully!')
 
 # Hyperparameters:
 batch_size = 64
-epochs = 2
+epochs = 500
 learning_rate = 0.001
 embedding_dim = 100
 
@@ -62,14 +61,9 @@ val_acc = history.history['val_acc']
 train_loss = history.history['loss']
 val_loss = history.history['val_loss']
 
-pdb.set_trace()
-
 cfg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 tg = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 lg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-cfg = [0.1, 0.5]
-tg = [10]
-lg = [0.1]
 metrics = ['train_acc', 'val_acc', 'train_loss', 'val_loss', 'mem_acc_val', 'comb_acc_val']
 
 metrics_dict = {}
