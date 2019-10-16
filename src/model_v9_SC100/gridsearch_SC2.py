@@ -113,7 +113,7 @@ epochs = len(train_acc)
 
 # Testing the optimal hyperparameters on the test set:
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
-y = tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
+y = tf.placeholder(tf.float32, shape=(None, num_categories), name='output_y')
 pred = model(x)
 cost = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=pred, onehot_labels=y))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
