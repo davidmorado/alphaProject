@@ -28,7 +28,7 @@ def CNN(num_categories, input_shape=(32, 32, 3), layers=[32, 64, 512], embedding
     model.add(Dense(embedding_dim))
     model.add(Activation('sigmoid'))
     model.add(BatchNormalization())
-    model.add(Dense(10))
+    model.add(Dense(100))
     model.add(Activation('softmax'))
     
     return model
