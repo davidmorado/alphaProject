@@ -64,9 +64,9 @@ val_loss = history.history['val_loss']
 cfg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 tg = [10, 20, 30, 40, 50, 60, 70, 80, 90]
 lg = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-cfg = [0.1, 0.5, 0.9]
-tg = [10, 50, 90]
-lg = [0.1, 0.5, 0.9]
+cfg = [0.1, 0.5]
+tg = [10]
+lg = [0.1]
 metrics = ['train_acc', 'val_acc', 'train_loss', 'val_loss', 'mem_acc_val', 'comb_acc_val']
 
 metrics_dict = {}
@@ -139,7 +139,7 @@ with tf.Session() as sess:
 
         for bidx in batch_idxs:
             # train
-            sess.run(optimizer, feed_dict = {x: x_train_val[bidx], y: x_train_val[bidx]})
+            sess.run(optimizer, feed_dict = {x: x_train_val[bidx], y: y_train_val[bidx]})
         print(F'epoch: {epoch}/{epochs}')
 
         print('Recording Metrics.')
