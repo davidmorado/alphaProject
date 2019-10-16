@@ -112,7 +112,7 @@ with tf.Session() as sess:
                             
 
             
-            with open('results2.pickle', 'wb') as f:
+            with open('results.pickle', 'wb') as f:
                 pickle.dump(metrics_dict, f)
 
             print('Memory Metrics recorded and all metrics saved.')
