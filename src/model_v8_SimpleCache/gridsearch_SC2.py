@@ -9,7 +9,6 @@ import keras
 from keras import Model
 from memory_predictions import memory_predictions
 import pickle
-import pdb
 
 # creates folders
 folders = ['models', 'gridresults', 'tb_logs', 'errs', 'logs']
@@ -23,8 +22,6 @@ x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10', normaliz
 num_categories = y_train.shape[1]
 input_shape = x_train.shape[1:]
 
-
-pdb.set_trace()
 print('Data has been loaded successfully!')
 
 # Hyperparameters:
