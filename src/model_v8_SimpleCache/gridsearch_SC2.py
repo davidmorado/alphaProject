@@ -26,7 +26,7 @@ print('Data has been loaded successfully!')
 
 # Hyperparameters:
 batch_size = 64
-epochs = 500
+epochs = 1
 learning_rate = 0.001
 embedding_dim = 100
 
@@ -85,7 +85,7 @@ for cf in cfg:
                 mem_acc_val, comb_acc_val= (0, 0)
             for m in metrics:
                 metrics_dict[(cf, t, l)][m].append(eval(m))
-            if metrics_dict[(cf, t, l)]['comb_acc_val'] > best_acc:
+            if metrics_dict[(cf, t, l)]['comb_acc_val'][-1] > best_acc:
                 best_acc = metrics_dict[(cf, t, l)]['comb_acc_val']
                 best_HP = (cf, t, l)
 
