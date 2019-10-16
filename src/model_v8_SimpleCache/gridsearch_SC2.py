@@ -76,7 +76,7 @@ for cf in cfg:
 
 best_HP = ()
 best_acc = 0
-counter = 1
+counter = 0
 maxcounter = len(cfg)*len(tg)*len(lg)*len(metrics)
 for cf in cfg:
     for t in tg:
@@ -87,7 +87,10 @@ for cf in cfg:
                 mem_acc_val, comb_acc_val= (0, 0)
             for m in metrics:
                 metrics_dict[(cf, t, l)][m].append(eval(m))
+                counter+=1
                 print(counter/maxcounter)
+            print(metrics_dict[(cf, t, l)]['comb_acc_val'][-1])
+            print(best_acc)
             if metrics_dict[(cf, t, l)]['comb_acc_val'][-1] > best_acc:
                 best_acc = metrics_dict[(cf, t, l)]['comb_acc_val']
                 best_HP = (cf, t, l)
