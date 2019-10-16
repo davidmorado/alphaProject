@@ -76,12 +76,10 @@ with tf.Session() as sess:
         num_batches = int(x_train.shape[0]/batch_size)
         batch_idxs = np.array_split(idx, num_batches)
 
-        counter=0
         for bidx in batch_idxs:
-            counter+=1
             # train
             sess.run(optimizer, feed_dict = {x: x_train[bidx], y: y_train[bidx]})
-            print(F'epoch: {epoch}/{epochs}\t training_step: {counter}/{len(batch_idxs)}')
+        print(F'epoch: {epoch}/{epochs}')
 
 
         # get accuracy
