@@ -76,43 +76,40 @@ with tf.Session() as sess:
         num_batches = int(x_train.shape[0]/batch_size)
         batch_idxs = np.array_split(idx, num_batches)
 
+        counter=0
         for bidx in batch_idxs:
-
+            counter+=1
             # train
             sess.run(optimizer, feed_dict = {x: x_train[bidx], y: y_train[bidx]})
+            print('epoch: {epoch}/{epochs}\t training_step: {counter}/{len(batch_idxs)}')
 
-            print('Training step taken.')
 
-            # get accuracy
-            # train_acc = sess.run(accuracy, feed_dict = {x: x_train, y: y_train})
-            train_acc = 'OOM'
-            val_acc = sess.run(accuracy, feed_dict = {x: x_val, y: y_val})
-            test_acc = sess.run(accuracy, feed_dict = {x: x_test, y: y_test})
+        # get accuracy
+        # train_acc = sess.run(accuracy, feed_dict = {x: x_train, y: y_train})
+        train_acc = 'OOM'
+        val_acc = sess.run(accuracy, feed_dict = {x: x_val, y: y_val})
+        test_acc = sess.run(accuracy, feed_dict = {x: x_test, y: y_test})
 
-            # get loss
-            # train_loss = sess.run(cost, feed_dict = {x: x_train, y: y_train})
-            train_loss = 'OOM'
-            val_loss = sess.run(cost, feed_dict = {x: x_val, y: y_val})
-            test_loss = sess.run(cost, feed_dict = {x: x_test, y: y_test})
+        # get loss
+        # train_loss = sess.run(cost, feed_dict = {x: x_train, y: y_train})
+        train_loss = 'OOM'
+        val_loss = sess.run(cost, feed_dict = {x: x_val, y: y_val})
+        test_loss = sess.run(cost, feed_dict = {x: x_test, y: y_test})
 
-            print('Standard Metrics recorded.')
+        for cf in cfg:
+            for t in tg:
+                for l in lg:
+                    try:
+                        mem_acc_val, comb_acc_val = memory_predictions(model, x_train, x_val, y_train, y_val, num_categories, cf, t, l)
+                        mem_acc_test, comb_acc_test = memory_predictions(model, x_train, x_test, y_train, y_test, num_categories, cf, t, l)
+                    except:
+                        mem_acc_val, comb_acc_val, mem_acc_test, comb_acc_test = ('OF', 'OF', 'OF', 'OF')
+                    for m in metrics:
+                        metrics_dict[(cf, t, l)][m].append(eval(m))
+                        
 
-            for cf in cfg:
-                for t in tg:
-                    for l in lg:
-                        try:
-                            mem_acc_val, comb_acc_val = memory_predictions(model, x_train, x_val, y_train, y_val, num_categories, cf, t, l)
-                            mem_acc_test, comb_acc_test = memory_predictions(model, x_train, x_test, y_train, y_test, num_categories, cf, t, l)
-                        except:
-                            mem_acc_val, comb_acc_val, mem_acc_test, comb_acc_test = ('OF', 'OF', 'OF', 'OF')
-                        print('Recoreded:')
-                        print((cf, t, l))
-                        for m in metrics:
-                            metrics_dict[(cf, t, l)][m].append(eval(m))
-                            
+        
+        with open('results2.pickle', 'wb') as f:
+            pickle.dump(metrics_dict, f)
 
-            
-            with open('results.pickle', 'wb') as f:
-                pickle.dump(metrics_dict, f)
-
-            print('Memory Metrics recorded and all metrics saved.')
+        print('Memory Metrics recorded and all metrics saved.')
