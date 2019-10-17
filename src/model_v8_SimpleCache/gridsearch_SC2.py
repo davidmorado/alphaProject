@@ -9,6 +9,7 @@ import keras
 from keras import Model
 from memory_predictions import memory_predictions
 import pickle
+from time import time
 
 # creates folders
 folders = ['models', 'gridresults', 'tb_logs', 'errs', 'logs']
@@ -26,7 +27,7 @@ print('Data has been loaded successfully!')
 
 # Hyperparameters:
 batch_size = 64
-epochs = 500
+epochs = 1
 learning_rate = 0.001
 embedding_dim = 100
 
@@ -38,9 +39,15 @@ model = CNN(
     layers=[32, 64, 512], 
     embedding_dim=embedding_dim)
 
+start = time()
 model.compile(loss=keras.losses.categorical_crossentropy,
                 optimizer = keras.optimizers.Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
                 metrics=['accuracy'])
+end = time()
+print('helloooo')
+print(end-start)
+sys.exit()
+
 
 tbCallBack = keras.callbacks.TensorBoard(log_dir='tb_logs/mainmodel', histogram_freq=0,  
         write_graph=True, write_images=True)
