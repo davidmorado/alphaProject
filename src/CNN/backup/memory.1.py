@@ -58,28 +58,24 @@ class Memory():
                 # - recursive call: write(rest of h, rest of values)
 
         if self.fit_into_memory(h):
-            with tf.variable_scope('WRITE', reuse=tf.AUTO_REUSE):
-                # end recursion:
-                # indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
-                indices = tf.range(start=self.pointer, limit=self.pointer+h.shape[0])
-                #self.session.run(tf.variables_initializer(var_list=[indices]))
-                self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
-                self.Values = tf.scatter_update(self.Values, indices, updates=values)
-                self.pointer += h.shape[0]
+            # end recursion:
+            indices = tf.Variable(tf.range(start=self.pointer, limit=self.pointer+h.shape[0]))
+            self.session.run(tf.variables_initializer(var_list=[indices]))
+            self.Keys = tf.scatter_update(self.Keys, indices, updates=h)
+            self.Values = tf.scatter_update(self.Values, indices, updates=values)
+            self.pointer += h.shape[0]
 
         else: # does not fit into memory
-            with tf.variable_scope('WRITE', reuse=tf.AUTO_REUSE):
-                # indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity)) # tf.range does not include limit
-                indices = tf.range(start=self.pointer, limit=self.capacity)
-                #self.session.run(tf.variables_initializer(var_list=[indices]))
-                free_space = self.free_space()
-                offset = h.shape[0] - free_space
-                h_tmp = h[:free_space]
-                values_tmp = values[:free_space]
-                print('partial h: ', h_tmp.shape, 'left_over: ', offset)
-                self.Keys = tf.scatter_update(self.Keys, indices, updates=h_tmp)
-                self.Values = tf.scatter_update(self.Values, indices, updates=values_tmp)
-                self.pointer = 0
+            indices = tf.Variable(tf.range(start=self.pointer, limit=self.capacity)) # tf.range does not include limit
+            self.session.run(tf.variables_initializer(var_list=[indices]))
+            free_space = self.free_space()
+            offset = h.shape[0] - free_space
+            h_tmp = h[:free_space]
+            values_tmp = values[:free_space]
+            print('partial h: ', h_tmp.shape, 'left_over: ', offset)
+            self.Keys = tf.scatter_update(self.Keys, indices, updates=h_tmp)
+            self.Values = tf.scatter_update(self.Values, indices, updates=values_tmp)
+            self.pointer = 0
 
             # recursive call
             self.write(h[free_space:], values[free_space:])
@@ -148,20 +144,19 @@ class Memory():
     def adapt_predict(self, h, niters=3, lr=0.001):
         # h: [1 x embedding_size]
         # niters: [1]
-        with tf.variable_scope('READ', reuse=tf.AUTO_REUSE):
-            keys, values, weights = self.read(h)
-        with tf.variable_scope('ORIG', reuse=tf.AUTO_REUSE):
-            collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
-            original_weights = [tf.assign(tf.Variable(tf.zeros(layer.shape)), layer, validate_shape=False) for layer in collections]
+        
+        keys, values, weights = self.read(h)
+    
+        collections = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='SECOND_STAGE')
+        original_weights = [tf.assign(tf.Variable(tf.zeros(layer.shape)), layer, validate_shape=False) for layer in collections]
         with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
             weights_to_adapt = [tf.Variable(layer)  for layer in collections]
-        
         
         logits = self.model(keys)
         cost = tf.reduce_sum(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=values, weights=weights))
         reg = tf.reduce_sum([tf.reduce_sum(tf.square(weights_to_adapt[i] - original_weights[i])) for i in range(len(original_weights))])
         objective = cost + reg
-        
+         
         #with tf.variable_scope('TMP', reuse=tf.AUTO_REUSE):
         adapter = tf.train.AdamOptimizer(learning_rate=lr)  
         #self.session.run(tf.variables_initializer(var_list=[adapter]))
