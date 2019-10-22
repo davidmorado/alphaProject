@@ -7,6 +7,7 @@
 """
 from keras.datasets import cifar10, cifar100
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 import numpy as np
 import keras 
 import pandas as pd
@@ -307,6 +308,13 @@ def get_omniglot_proto2(ratio):
   clean()
   
   return  train_val_test_splitter(images2, labels2, ratio, random_state=999) 
+
+def sample_data(data_x, data_y, percentage, random=True):
+  data_size = len(data_x)
+  percentage_limit = int(data_size*percentage)
+  if random:
+    data_x, data_y = shuffle(data_x, data_y, random_state=0)
+  return data_x[:percentage_limit], data_y[:percentage_limit]
 
 #Run this to get train-val-test sets (For prototypical: cifar10_proto, omniglot_proto)
 x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10_proto2',False,0.15)
