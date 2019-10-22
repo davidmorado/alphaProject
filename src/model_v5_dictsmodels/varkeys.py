@@ -54,3 +54,10 @@ class Varkeys(Layer):
         return o
 
 
+
+
+
+
+def varkeys(keysize, n_keys_per_class, num_categories, bandwidth):
+
+
