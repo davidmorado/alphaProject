@@ -316,19 +316,19 @@ def sample_data(data_x, data_y, percentage, random=True):
   return data_x[:percentage_limit], data_y[:percentage_limit]
 
 #Run this to get train-val-test sets (For prototypical: cifar10_proto, omniglot_proto)
-x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10_proto2',False,0.15)
+#x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10_proto2',False,0.15)
 
-x_train.shape, x_val.shape, x_test.shape
+#x_train.shape, x_val.shape, x_test.shape
 #y_train.shape, y_val.shape, y_test.shape
 #len(y_train), len(y_val), len(y_test)
 
 #For omniglot-prototypical
-train_dataset = x_train
-train_classes = y_train
-val_dataset = x_val
-val_classes = y_val
-test_dataset = x_test
-test_classes = y_test
-n_classes = len(train_classes)
-n_val_classes = len(val_classes)
-n_test_classes = len(test_classes)
+# train_dataset = x_train
+# train_classes = y_train
+# val_dataset = x_val
+# val_classes = y_val
+# test_dataset = x_test
+# test_classes = y_test
+# n_classes = len(train_classes)
+# n_val_classes = len(val_classes)
+# n_test_classes = len(test_classes)
