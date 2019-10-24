@@ -44,6 +44,7 @@ for bw in bws:
         kpc = int(kpc)
         for tp in tps:
             tp = float(tp)
+            print('bw:{}, kpc:{}, tp:{}'.format(bw, kpc, tp))
 
             # Hyperparameters:
             hp_dict = {
@@ -78,3 +79,5 @@ for bw in bws:
             filename = F"gridresults/{modelpath}.pkl"
             with open(filename, 'wb') as f:
                 pickle.dump(out_results, f)
+
+

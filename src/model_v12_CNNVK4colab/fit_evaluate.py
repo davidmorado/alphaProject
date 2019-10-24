@@ -17,7 +17,7 @@ def fit_evaluate(model, x_train, y_train, x_val, y_val, x_test,  y_test, batch_s
     history = model.fit(x_train, y_train,
             batch_size=batch_size,
             epochs=epochs,
-            verbose=1,
+            verbose=0,
             validation_data=(x_val, y_val),
             callbacks = [tbCallBack, early_stopping])
 
