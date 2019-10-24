@@ -58,6 +58,7 @@ for bw in bws:
             train_percentage = hp_dict['train_percentage']
 
             # get training data
+            print(tp)
             x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10', normalize=True, ratio=train_percentage)
             num_categories = y_train.shape[1]
             N,h,w,c = x_train.shape
