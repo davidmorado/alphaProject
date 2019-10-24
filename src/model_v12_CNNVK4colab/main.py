@@ -24,7 +24,7 @@ bws = [1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4]
 # number of keys per class
 kpcs = [1, 1e1, 1e2, 1e3]
 # percentage of training data used
-tps = [1, 0.5, 0.25, 0.125, 0.0625]
+tps = [1., 0.5, 0.25, 0.125, 0.0625]
 
 ##########
 # TEST MODE
@@ -58,7 +58,6 @@ for bw in bws:
             train_percentage = hp_dict['train_percentage']
 
             # get training data
-            print(tp)
             x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10', normalize=True, ratio=train_percentage)
             num_categories = y_train.shape[1]
             N,h,w,c = x_train.shape
