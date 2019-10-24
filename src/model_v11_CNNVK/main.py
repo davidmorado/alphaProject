@@ -30,10 +30,11 @@ train_percentage = hp_dict['train_percentage']
 x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10', normalize=True, ratio=train_percentage)
 num_categories = y_train.shape[1]
 N,h,w,c = x_train.shape
+input_shape=h,w,c
 
 model = CNN_VK(
     num_categories,
-    input_shape=N, 
+    input_shape=input_shape, 
     layers=[32, 64, 512], 
     embedding_dim=embedding_dim, 
     n_keys_per_class=n_keys_per_class, 
