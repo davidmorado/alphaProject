@@ -362,7 +362,7 @@ def percentage_splitter(train, val, yt ,yv ,merging ,random_selection ,ratio):
 
 #Merging: merges train and validation, Random_selection: makes train data shuffle before split so it would select different instances 
 #Ratio: selects instances with the given percentage [0-1]
-x_train2, y_train2 = percentage_splitter(x_train, x_val, y_train, y_val, merging=True, random_selection=True, ratio=0.2)
+x_train2, y_train2 = percentage_splitter(x_train, x_val, y_train, y_val, merging=True, random_selection=False, ratio=0.2)
 x_train=x_train2; y_train=y_train2
 x_train.shape, x_val.shape, x_test.shape
 #y_train.shape, y_val.shape, y_test.shape
