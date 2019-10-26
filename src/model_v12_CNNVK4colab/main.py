@@ -24,12 +24,14 @@ bws = [1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4]
 # number of keys per class
 kpcs = [1, 1e1, 1e2, 1e3]
 # percentage of training data used
-tps = [1.0, 0.5, 0.25, 0.125, 0.0625]
+#tps = [1.0, 0.5, 0.25, 0.125, 0.0625]
+tps = [1.0, 0.75, 0.5, 0.3, 0.2, 0.1]
+# first find optimal hyperparameters, then evaluate on different tps
 
 ##########
 # TEST MODE
 # don't forget to set partition=TEST in template.sh
-testing = False
+testing = True
 if testing:
 	# bandwith sizes
 	bws = [10]
@@ -38,12 +40,19 @@ if testing:
 	# percentage of training data used
 	tps = [0.125]
 
+# creating list of grids
 for bw in bws:
-    bw = float(bw)
     for kpc in kpcs:
-        kpc = int(kpc)
         for tp in tps:
             tp = float(tp)
+            bw = float(bw)
+            kpc = int(kpc)
+
+            modelpath = F"CNNVK_bw={bw}_kpc={kpc}_tp={tp}"
+            if modelpath + '.pkl' in os.listdir('gridresults'):
+                continue
+
+            print('Current search ')
             print('bw:{}, kpc:{}, tp:{}'.format(bw, kpc, tp))
 
             # Hyperparameters:
@@ -72,8 +81,6 @@ for bw in bws:
                 embedding_dim=embedding_dim, 
                 n_keys_per_class=n_keys_per_class, 
                 bandwidth=bandwidth)
-
-            modelpath = F"CNNVK_bw={hp_dict['bandwidth']}_kpc={hp_dict['n_keys_per_class']}_tp={hp_dict['train_percentage']}"
 
             metrics_dict, scores = fit_evaluate(model, x_train, y_train, x_val, y_val, x_test, y_test, batch_size, epochs, lr=learning_rate, logstring=F'tb_logs/{modelpath}')
 
