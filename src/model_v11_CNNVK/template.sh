@@ -8,7 +8,7 @@
 # ## FOR GPU USE:
 #SBATCH --partition=TEST
 #SBATCH --gres=gpu:1
-source activate GPU
+source activate GPU2
 
 ## Run the script
 srun python main.py $1 $2 $3
