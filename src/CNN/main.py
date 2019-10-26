@@ -24,7 +24,7 @@ dataset = 'cifar10'
 split_ratio = 0.15
 n_output = num_classes= 10
 nodes_in_extra_layer = 50
-dropout_in_extra_layer = 0.25
+dropout_in_extra_layer = 0.75
 tr = 1
 
 
@@ -158,11 +158,12 @@ def build_graph(nodes_in_extra_layer, dropout_in_extra_layer):
 
     return x, y, embeddings, logits, cost, original_optimizer, train_op, correct_pred, accuracy
 
-
+def del_graph():
+    del x, y, embeddings, logits, cost, original_optimizer, train_op, correct_pred, accuracy
 
 
 for nodes_in_extra_layer in [20, 50 ,75]:
-    for dropout_in_extra_layer in [0.1, 0.25, 0.5]:
+    for dropout_in_extra_layer in [0.9, 0.75, 0.5]:
 
         hp_dict = {'nodes_in_extra_layer' : nodes_in_extra_layer, 'dropout_in_extra_layer' : dropout_in_extra_layer, 'tr' : tr}
         history = create_empty_history()
@@ -208,7 +209,7 @@ for nodes_in_extra_layer in [20, 50 ,75]:
 
 
                 print('Epoch {:>2}:\t'.format(epoch + 1), end='')
-                print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss), end='')
+                print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss))
 
 
         modelpath = '&'.join([F"{param}={value}" for param, value in hp_dict.items()])
