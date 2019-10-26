@@ -31,7 +31,7 @@ tps = [1.0, 0.75, 0.5, 0.3, 0.2, 0.1]
 ##########
 # TEST MODE
 # don't forget to set partition=TEST in template.sh
-testing = True
+testing = False
 if testing:
 	# bandwith sizes
 	bws = [10]
