@@ -49,12 +49,9 @@ for f in folders:
 # print('update_period: ',update_period)
 
 
-# lists for storing data about accuracy and loss:
-
 
 
 # Data Loading and Preprocessing
-# (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
 
 
@@ -208,6 +205,26 @@ y_train = np.concatenate([y_train, y_val], axis=0)
 x_val = x_test
 y_val = y_test
 
+sys.exit(0)
+
+nodes_in_extra_layer = None
+dropout_in_extra_layer = None
+
+    # add last layer
+logits = tf.contrib.layers.fully_connected(inputs=embeddings, num_outputs=nodes_in_extra_layer, activation_fn=tf.nn.relu)
+logits = tf.nn.dropout(logits, keep_prob=dropout_in_extra_layer) 
+
+# Loss and Optimizer
+cost = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=y))
+
+original_optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+#optimizer = tf.contrib.estimator.clip_gradients_by_norm(original_optimizer, clip_norm=2.0)
+train_op  = original_optimizer.minimize(cost)
+
+# Accuracy
+correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
+
 
 for tr in [0.125, 0.25, 0.5, 1]:
     hp_dict = {'nodes_in_extra_layer' : nodes_in_extra_layer, 'dropout_in_extra_layer' : dropout_in_extra_layer, 'tr' : tr} 
@@ -255,5 +272,4 @@ for tr in [0.125, 0.25, 0.5, 1]:
 
 
         modelpath = 'BEST_' + '&'.join([F"{param}={value}" for param, value in hp_dict.items()])
-
         save_history(history=history, hp_dict=hp_dict, modelpath=modelpath, gridsearch=False)

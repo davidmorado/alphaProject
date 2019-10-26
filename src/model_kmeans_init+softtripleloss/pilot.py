@@ -21,13 +21,13 @@ embedding_size = 100
 dataset = 'cifar10'
 split_ratio = 0.15
 n_output = num_classes= 10
-memory_size = 1000
-clusters_per_class = 3
+keys_per_class = 3
+bandwidth = 1
 
 
 import os
 # creates folders
-folders = ['models', 'gridresults', 'plots', 'tb_logs', 'errs', 'logs']
+folders = ['models', 'gridresults', 'evaluation', 'plots', 'tb_logs', 'errs', 'logs']
 for f in folders:
     try:
         os.makedirs(f)
@@ -48,16 +48,31 @@ for f in folders:
 
 
 # lists for storing data about accuracy and loss:
-history = {
-    'train' : {
-                'memory' : {'acc' : [], 'loss':[]},         # lists are of the form: [(epoch, score) ...]            
-                'no_memory' : {'acc' : [], 'loss' : []}
-            }, 
-    'valid' : {
-                'memory' : {'acc' : [], 'loss':[]}, 
-                'no_memory' : {'acc' : [], 'loss' : []}
+def save_history(history, hp_dict, modelpath, gridsearch=True):        
+    out_results = (hp_dict, history)
+    if gridsearch:
+        filename = F"gridresults/{modelpath}.pkl"
+    else:
+        filename = F"evaluation/{modelpath}.pkl"
+    with open(filename, 'wb') as f:
+        pickle.dump(out_results, f)
+
+    import matplotlib.pyplot as plt
+    plt.plot(history['valid']['no_memory']['acc'])
+    plt.plot(history['train']['no_memory']['acc'])
+    plt.savefig(F'plots/{modelpath}.png')
+
+def create_empty_history():
+    return {
+            'train' : {
+                        'memory' : {'acc' : [], 'loss':[]},         # lists are of the form: [(epoch, score) ...]            
+                        'no_memory' : {'acc' : [], 'loss' : []}
+                    }, 
+            'valid' : {
+                        'memory' : {'acc' : [], 'loss':[]}, 
+                        'no_memory' : {'acc' : [], 'loss' : []}
+                    }
             }
-}
 
 
 # Data Loading and Preprocessing
@@ -94,7 +109,7 @@ y = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
 sess = tf.Session()
 
 # build network with memory
-M = Memory(embedding_size=embedding_size, size=memory_size, session=sess, target_size=num_classes, K=nearest_neighbors)
+M = Memory(keysize, keys_per_class, num_categories, bandwidth)
             
 M.initialize()
 embeddings = conv_netV2(x, embedding_size=embedding_size)

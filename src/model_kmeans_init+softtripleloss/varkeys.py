@@ -51,7 +51,8 @@ import numpy as np
 
 
 class Varkeys:
-    def __init__(self, keysize, keys_per_class, num_categories, bandwidth):
+    def __init__(self, keysize, keys_per_class, num_categories, bandwidth, num_iterations=5):
+        self.num_iterations = num_iterations
         self.bandwidth = bandwidth
         self.num_categories = num_categories
         self.keysize = keysize # embedding_dim
@@ -88,7 +89,7 @@ class Varkeys:
         # train
         num_iterations = 5
         previous_centers = None
-        for _ in xrange(num_iterations):
+        for _ in xrange(self.num_iterations):
             kmeans.train(lambda : (x, y))
             cluster_centers = kmeans.cluster_centers()
             if previous_centers is not None:
@@ -103,7 +104,7 @@ class Varkeys:
 
         num_clusters = self.keys_per_class
         for class_x, class_y in zip(x, y):
-            kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=False)
+            kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=False,initial_clusters=KMEANS_PLUS_PLUS_INIT)
                     
 
 
