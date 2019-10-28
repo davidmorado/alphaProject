@@ -236,7 +236,7 @@ dropout_in_extra_layer = None
 
 
 
-for tr in [0.125, 0.25, 0.5, 1]:
+for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
     hp_dict = {'nodes_in_extra_layer' : nodes_in_extra_layer, 'dropout_in_extra_layer' : dropout_in_extra_layer, 'tr' : tr} 
     history = create_empty_history()
 

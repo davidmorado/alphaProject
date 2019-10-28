@@ -51,7 +51,8 @@ import numpy as np
 
 
 class Varkeys:
-    def __init__(self, keysize, keys_per_class, num_categories, bandwidth, num_iterations=5):
+    def __init__(self, encoder, keysize, keys_per_class, num_categories, bandwidth, num_iterations=5):
+        self.encoder = encoder
         self.num_iterations = num_iterations
         self.bandwidth = bandwidth
         self.num_categories = num_categories
@@ -69,44 +70,57 @@ class Varkeys:
         output = tf.matmul(KV_, KV)
         return output
 
-    def sample(self, x, y, tr):
 
-        samples_by_class_x = []
-        samples_by_class_y = []
+
+
+    def sample(self, x, y, tr, n_classes=10):
+
+        sample_x = []
+        sample_y = []
         
-        for category in range(self.num_categories):
+        for category in range(n_classes):
             idx_category = [idx for idx in range(y.shape[0]) if  y[idx, category] == 1]
-            x_tmp = x[idx_category]
+            x_tmp = x[idx_category] # all members from one class
             y_tmp = y[idx_category]
             n = int(x_tmp.shape[0] * tr)
+            np.random.seed(1)
+            index = np.random.choice(x_tmp.shape[0], n, replace=False)  
 
-            samples_by_class_x.append(x_tmp[:n])
-            samples_by_class_y.append(y_tmp[:n])
-
-        return (samples_by_class_x, samples_by_class_y)
-
-    def train_kmeans(self, x, y):
-        # train
-        num_iterations = 5
-        previous_centers = None
-        for _ in xrange(self.num_iterations):
-            kmeans.train(lambda : (x, y))
-            cluster_centers = kmeans.cluster_centers()
-            if previous_centers is not None:
-                print 'delta:', cluster_centers - previous_centers
-            previous_centers = cluster_centers
-            print 'score:', kmeans.score(input_fn)
-            print 'cluster centers:', cluster_centers
+            sample_x.append(x_tmp[index])
+            sample_y.append(y_tmp[index])
+            # todo: make sampling random instead of taking first n
 
 
-    def init_keys(self, x, y, ratio):
-        x, y = self.sample(x, y, ratio)
+        return (sample_x, sample_y)
 
-        num_clusters = self.keys_per_class
-        for class_x, class_y in zip(x, y):
-            kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=False,initial_clusters=KMEANS_PLUS_PLUS_INIT)
-                    
 
+    def _input_fn(self, x, y):
+        batches = tf.data.Dataset.from_tensors([x_class, y_class]).repeat(1).batch(batch_size=32)   
+        for batch in batches: 
+            sess.run([self.encoder], feed_dict={x:x, y:y})
+
+ 
+    
+    def init_keys(self, x, y, data_ratio=0.2)
+        num_clusters = keys_per_class
+        self.kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=True,
+                                            initial_clusters=tf.contrib.factorization.KMeansClustering.KMEANS_PLUS_PLUS_INIT)
+
+        x, y = self.sample(x, y, data_ratio)
+        x = x[0] # take first class
+        y = y[0] # take first class
+
+        for x_class, y_class in zip(x, y):
+
+            input_fn =  lambda : tf.data.Dataset.from_tensors([x_class, y_class]).repeat(1).batch(batch_size=32)   
+
+            # train
+            previous_centers = None
+            for _ in range(self.num_iterations):
+                kmeans.train(input_fn)
+                cluster_centers = kmeans.cluster_centers()
+                previous_centers = cluster_centers
+    
 
 
 
