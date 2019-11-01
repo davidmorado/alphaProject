@@ -29,7 +29,6 @@ for layer in RN50.layers[1:-2]:
 memory = Varkeys(keysize=embedding_dim, n_keys_per_class=n_keys_per_class, num_categories=num_categories, bandwidth=bandwidth)
 
 x = RN50.output
-print('lol')
 x = GlobalAveragePooling2D()(x)
 x = Dense(embedding_dim)(x)
 predictions = memory(x)
