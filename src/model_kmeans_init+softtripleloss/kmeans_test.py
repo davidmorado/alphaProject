@@ -31,6 +31,7 @@ def sample(x, y, tr, n_classes=10):
     return (sample_x, sample_y)
  
 num_classes = 10
+
 x_placeholder = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
 encoder = conv_netV2(x_placeholder, 10)
@@ -41,6 +42,7 @@ keys_per_class = 3
 split_ratio = 0.2
 train_ratio = 0.1
 dataset = 'cifar10'
+batch_size = 32
 
 x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
 
@@ -50,12 +52,19 @@ y = y[0] # take first class
 
 
 batches = tf.data.Dataset.from_tensor_slices((x, y)).batch(batch_size=32, drop_remainder=True)   
+print('HELLO WORLD')
 with tf.Session() as sess:
-    out = sess.run([encoder], feed_dict={x_placeholder : x})
-    print(out)
+    sess.run(tf.global_variables_initializer())
+    embeddings = []
+    minibatches = random_mini_batches(x, y, batch_size, 1)
+    for minibatch in minibatches:
+        batch_x, batch_y = minibatch
+        out = sess.run([encoder], feed_dict={x_placeholder : batch_x})
+        embeddings.append(out)
+    print(embeddings)
 
 
-
+print('CLUSTER STARTING')
 num_clusters = keys_per_class
 
 kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=False,

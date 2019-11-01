@@ -230,8 +230,8 @@ y_val = y_test
 
 sys.exit(0)
 
-nodes_in_extra_layer = None
-dropout_in_extra_layer = None
+nodes_in_extra_layer = 75
+dropout_in_extra_layer = 0.5
 
 
 
@@ -282,7 +282,7 @@ for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
 
 
             print('Epoch {:>2}:\t'.format(epoch + 1), end='')
-            print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss), end='')
+            print('acc: {:.4f}, loss: {:.4f}'.format(train_acc, train_loss), '\t' + 'val_acc: {:.4f}, loss: {:.4f}'.format(valid_acc, valid_loss))
 
 
         modelpath = 'BEST_' + '&'.join([F"{param}={value}" for param, value in hp_dict.items()])
