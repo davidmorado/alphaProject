@@ -7,7 +7,7 @@ import os
 
 from CNN_VK import CNN_VK
 from fit_evaluate import fit_evaluate
-from data_loader import get_dataset, sample_data
+from data_loader import get_dataset, percentage_splitter
 from utils import assertfolders
 assertfolders()
 
@@ -67,9 +67,9 @@ for bw in bws:
             train_percentage = hp_dict['train_percentage']
 
             # get training data
-            x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10', normalize=True, ratio=0.15)
+            x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10', normalize=True, ratio=0.2)
             # subsample training data
-            x_train, y_train = sample_data(x_train, y_train, train_percentage)
+            x_train, y_train = percentage_splitter(x_train, x_val, y_train, y_val, merging=False, random_selection=False, ratio=train_percentage) 
             num_categories = y_train.shape[1]
             N,h,w,c = x_train.shape
             input_shape=h,w,c

@@ -36,7 +36,7 @@ embeddings = Stage1(x)
 
 # Stage2
 memory.write(embeddings, y)
-predictions = Stage2(embeddings)
+predictions = Stage2(embeddings) # play around with tf.AUTO_REUSE
 cost = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=predictions, onehot_labels=y), name='cost')
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate, name='Adam').minimize(cost)
 correct_predictions = tf.equal(tf.argmax(predictions, 1), tf.argmax(y, 1), name='correct_predictions')
@@ -44,7 +44,7 @@ accuracy = tf.reduce_mean(tf.cast(correct_predictions, tf.float32), name='train_
 
 # Stage2 for augmented prediction
 hit_keys, hit_values, weights = memory.read(embeddings)
-predictions_aug = Stage2(hit_keys, reuse=True)
+predictions_aug = Stage2(hit_keys, reuse=True) 
 cost_aug = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=predictions_aug, onehot_labels=hit_values, weights=weights), name='cost_aug')
 optimizer_aug = tf.train.AdamOptimizer(learning_rate=learning_rate, name='Adam_aug').minimize(cost_aug, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='Stage2'))
 augmented_prediction = Stage2(embeddings, reuse=True)

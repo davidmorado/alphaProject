@@ -3,10 +3,10 @@
 1. creditcard.csv file has to be uploaded to the same folder to be able to use it!
 2. Dataset names: cifar10 - cifar100 - creditcard - omniglot
 3. For prototypical: cifar10_proto(Instance-Base-Split) & cifar10_proto2(Class-Base-Split), omniglot_proto(Instance-Base-Split) & omniglot_proto2(Class-Base-Split)
+
 """
 from keras.datasets import cifar10, cifar100
 from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
 import numpy as np
 import keras 
 import pandas as pd
@@ -17,6 +17,7 @@ import shutil
 import zipfile
 import wget
 from PIL import Image
+from sklearn.utils import shuffle
 
 path = os.path.join(os.path.dirname(os.path.realpath('__file__')))
 os.chdir(path)
@@ -45,6 +46,15 @@ def get_dataset(ds_name, normalize,ratio):
       
       elif ds_name == 'cifar10_proto2':    
         x_train, x_val, x_test, y_train, y_val, y_test = get_cifar10_proto2(ratio)
+        y_train = np.arange(len(y_train)).tolist()
+        y_val = np.arange(len(y_train),len(y_train)+len(y_val)).tolist()
+        y_test = np.arange(len(y_train)+len(y_val),len(y_train)+len(y_val)+len(y_test)).tolist()
+        
+      elif ds_name == 'cifar100_proto':   
+        x_train, x_val, x_test, y_train, y_val, y_test = get_cifar100_proto(ratio)
+      
+      elif ds_name == 'cifar100_proto2':    
+        x_train, x_val, x_test, y_train, y_val, y_test = get_cifar100_proto2(ratio)
         y_train = np.arange(len(y_train)).tolist()
         y_val = np.arange(len(y_train),len(y_train)+len(y_val)).tolist()
         y_test = np.arange(len(y_train)+len(y_val),len(y_train)+len(y_val)+len(y_test)).tolist()
@@ -180,7 +190,6 @@ def get_omniglot(ratio):
 # Instance-base division
 def get_cifar10_proto(ratio): 
       (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-      (x_train, y_train), (x_test, y_test) = cifar10.load_data()
       X = np.concatenate((x_train, x_test), axis=0)
       y = np.concatenate((y_train, y_test), axis=0)
       
@@ -212,6 +221,42 @@ def get_cifar10_proto2(ratio):
           y_all.append(np.repeat(i, 1000))
       
       return train_val_test_splitter(np.array([X_all])[0], np.array([y_all])[0], ratio, random_state=999)
+
+# Instance-base division
+def get_cifar100_proto(ratio): 
+      (x_train, y_train), (x_test, y_test) = cifar100.load_data(label_mode='fine')
+      X = np.concatenate((x_train, x_test), axis=0)
+      y = np.concatenate((y_train, y_test), axis=0)
+      
+      x_train = np.zeros([100, int(len(X)*(1-2*ratio)/100),32,32,3], dtype=np.float32)
+      x_val = np.zeros([100, int(len(X)*(ratio)/100),32,32,3], dtype=np.float32)
+      x_test = np.zeros([100, int(len(X)*(ratio)/100),32,32,3], dtype=np.float32)
+
+      for cl in np.sort(np.unique(y)):
+          x_train[cl] = X[np.where(y.T[0]==cl)[0][:int(len(X)*(1-2*ratio)/100)]]
+          x_val[cl] = X[np.where(y.T[0]==cl)[0][int(len(X)*(1-2*ratio)/100):int(len(X)*(1-ratio)/100)]]
+          x_test[cl] = X[np.where(y.T[0]==cl)[0][int(len(X)*(1-ratio)/100):]]
+                     
+      y_train = [i for i in range(100)]
+      y_val = [i for i in range(100)]
+      y_test = [i for i in range(100)]
+               
+      return x_train, x_val, x_test, y_train, y_val, y_test
+  
+# Class-base division
+def get_cifar100_proto2(ratio): 
+      (x_train, y_train), (x_test, y_test) = cifar100.load_data(label_mode='fine')
+      X = np.concatenate((x_train, x_test), axis=0)
+      y = np.concatenate((y_train, y_test), axis=0)
+      
+      X_all , y_all =[] , []
+      for i in range(np.max(y)+1):
+          data=X[np.where(y==i)[0]]
+          X_all.append(data)
+          y_all.append(np.repeat(i, 1000))
+      
+      return train_val_test_splitter(np.array([X_all])[0], np.array([y_all])[0], ratio, random_state=999)
+
 
 # Instance-base division
 def get_omniglot_proto(ratio):
@@ -308,27 +353,72 @@ def get_omniglot_proto2(ratio):
   
   return  train_val_test_splitter(images2, labels2, ratio, random_state=999) 
 
-def sample_data(data_x, data_y, percentage, random=True):
-  data_size = len(data_x)
-  percentage_limit = int(data_size*percentage)
-  if random:
-    data_x, data_y = shuffle(data_x, data_y, random_state=0)
-  return data_x[:percentage_limit], data_y[:percentage_limit]
-
 #Run this to get train-val-test sets (For prototypical: cifar10_proto, omniglot_proto)
-#x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10_proto2',False,0.15)
+x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar10',False,0.20)
 
-#x_train.shape, x_val.shape, x_test.shape
+x_train.shape, x_val.shape, x_test.shape
 #y_train.shape, y_val.shape, y_test.shape
 #len(y_train), len(y_val), len(y_test)
 
+def percentage_splitter(train, val, yt ,yv ,merging ,random_selection ,ratio):
+    
+    if merging == True:
+
+        if len(train.shape)==5:   #Prototypical
+            train = np.concatenate((train, val), axis=1)
+            if random_selection == True:
+                train = shuffle(train, random_state=999)
+                train2 = train[:,:int(np.ceil(train.shape[1]*ratio)),:,:,:]
+            else:
+                train2 = train[:,:int(np.ceil(train.shape[1]*ratio)),:,:,:]
+            yt2=yt
+            
+        elif len(train.shape)==4: #Our Model
+            train = np.concatenate((train, val), axis=0)
+            yt = np.concatenate((yt, yv), axis=0)
+            if random_selection == True:
+                print("burasi")
+                train, yt = shuffle(train, yt, random_state=999)
+                train2 = train[:int(np.ceil(train.shape[0]*ratio)),:,:,:]
+                yt2 = yt[:int(np.ceil(yt.shape[0]*ratio)),:]
+            else:
+                train2 = train[:int(np.ceil(train.shape[0]*ratio)),:,:,:]         
+                yt2 = yt[:int(np.ceil(yt.shape[0]*ratio)),:]
+            
+    else:
+        if len(train.shape)==5:   #Prototypical
+            if random_selection == True:
+                train = shuffle(train, random_state=999)
+                train2 = train[:,:int(np.ceil(train.shape[1]*ratio)),:,:,:]
+            else:
+                train2 = train[:,:int(np.ceil(train.shape[1]*ratio)),:,:,:]
+            yt2=yt
+        elif len(train.shape)==4:  #Our Model
+            if random_selection == True:
+                train, yt = shuffle(train, yt, random_state=999)
+                train2 = train[:int(np.ceil(train.shape[0]*ratio)),:,:,:]
+                yt2 = yt[:int(np.ceil(yt.shape[0]*ratio)),:]
+            else:
+                train2 = train[:int(np.ceil(train.shape[0]*ratio)),:,:,:]
+                yt = np.concatenate((yt, yv), axis=0)
+                yt2 = yt[:int(np.ceil(yt.shape[0]*ratio)),:]
+    return train2 , yt2   
+
+#Merging: merges train and validation
+#Random_selection: makes train data shuffle before split so it would select different instances 
+#Ratio: selects instances with the given percentage [0-1]
+x_train2, y_train2 = percentage_splitter(x_train, x_val, y_train, y_val, merging=True, random_selection=False, ratio=0.5) 
+x_train=x_train2; y_train=y_train2
+x_train.shape, x_val.shape, x_test.shape
+#y_train.shape, y_val.shape, y_test.shape
+
 #For omniglot-prototypical
-# train_dataset = x_train
-# train_classes = y_train
-# val_dataset = x_val
-# val_classes = y_val
-# test_dataset = x_test
-# test_classes = y_test
-# n_classes = len(train_classes)
-# n_val_classes = len(val_classes)
-# n_test_classes = len(test_classes)
+train_dataset = x_train
+train_classes = y_train
+val_dataset = x_val
+val_classes = y_val
+test_dataset = x_test
+test_classes = y_test
+n_classes = len(train_classes)
+n_val_classes = len(val_classes)
+n_test_classes = len(test_classes)
