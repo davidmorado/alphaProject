@@ -193,11 +193,9 @@ class Varkeys:
         plt.show()
         plt.clf()
 
-
-
     def regularizer(self):
         # k_ij = Kernel(c_i, c_j) = 1 / d (inverse distance kernel)
-        # for c_i = c_j, kernel(...) = some large number
+        # for c_i = c_j, kernel(c_i, c_i) = some large number
         # we want the keys to be far apart
         # reg = sum( Kernel(c_i, c_j))
         return tf.reduce_sum(self.kernel(self.keys, self.keys))
@@ -267,7 +265,7 @@ if __name__ == '__main__':
         plt.plot(keys_class_i[:, 0], keys_class_i[:, 1], 'ro', marker='x', markersize =10, color=colors[i])
     plt.show()
     plt.clf()   
-
+    sess.run(m.regularizer())
     m.keys_heatmap() 
     m.plot_keys() 
 
