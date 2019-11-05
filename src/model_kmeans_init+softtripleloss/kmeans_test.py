@@ -49,19 +49,31 @@ x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=spli
 x, y = sample(x_train, y_train, train_ratio)
 x = x[0] # take first class
 y = y[0] # take first class
-
-
-batches = tf.data.Dataset.from_tensor_slices((x, y)).batch(batch_size=32, drop_remainder=True)   
+  
 print('HELLO WORLD')
+
+
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     embeddings = []
+    labels = []
     minibatches = random_mini_batches(x, y, batch_size, 1)
     for minibatch in minibatches:
         batch_x, batch_y = minibatch
-        out = sess.run([encoder], feed_dict={x_placeholder : batch_x})
+        out = sess.run(encoder, feed_dict={x_placeholder : batch_x})
         embeddings.append(out)
-    print(embeddings)
+        print(out)
+        labels.append(batch_y)
+        print(out.shape)
+        print(batch_y.shape)
+    
+    embeddings = np.concatenate(embeddings, axis=0)
+    labels = np.concatenate(labels, axis=0)
+
+def input_fn():
+    batches = tf.data.Dataset.from_tensor_slices((embeddings)).batch(batch_size=32, drop_remainder=True) 
+    return batches 
+
 
 
 print('CLUSTER STARTING')
@@ -70,7 +82,7 @@ num_clusters = keys_per_class
 kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=False,
                                             initial_clusters=tf.contrib.factorization.KMeansClustering.KMEANS_PLUS_PLUS_INIT)
 
-input_fn =  lambda : tf.data.Dataset.from_tensors([x, y]).repeat(1)      
+# input_fn =  lambda : tf.data.Dataset.from_tensors([x, y]).repeat(1)      
 # train
 previous_centers = None
 for _ in range(num_iterations):
