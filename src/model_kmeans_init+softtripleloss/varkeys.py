@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 
 class Varkeys:
-    def __init__(self, sess, encoder, x_placeholder, keysize, keys_per_class, num_categories, bandwidth, kmeans_max_iter=5):
+    def __init__(self, sess, encoder, x_placeholder, keysize, keys_per_class, num_categories, bandwidth, kmeans_max_iter=100):
         self.encoder = encoder
         self.encoder_placeholder = x_placeholder
         self.sess = sess
@@ -53,8 +53,6 @@ class Varkeys:
         o = tf.reciprocal(d+1e-4)
         return o
 
-
-
     def sample(self, x, y, tr, n_classes=10):
 
         sample_x = []
@@ -70,14 +68,10 @@ class Varkeys:
 
             sample_x.append(x_tmp[index])
             sample_y.append(y_tmp[index])
-            # todo: make sampling random instead of taking first n
-
 
         return (sample_x, sample_y)
 
-
     def _input_fn(self, x, y):  
-     
         embeddings = []
         labels = []
         batch_size=32
@@ -88,7 +82,6 @@ class Varkeys:
             embeddings.append(out)
             labels.append(batch_y)
 
-            
         embeddings = np.concatenate(embeddings, axis=0)
         labels = np.concatenate(labels, axis=0)
 
@@ -98,11 +91,9 @@ class Varkeys:
 
         return input_fn, embeddings, labels
 
-
     def one_hot(self, length, i):
         return [1 if idx==i else 0 for idx in range(length)]
 
-    
     def init_keys_tf(self, x, y, data_ratio=0.2):
         num_clusters = self.keys_per_class
         self.kmeans = tf.contrib.factorization.KMeansClustering(num_clusters=num_clusters, use_mini_batch=True,
@@ -128,19 +119,13 @@ class Varkeys:
             centers = self.kmeans.cluster_centers()
             smart_keys.append(centers)
         smart_keys = np.concatenate(smart_keys, axis=0)
-
         del self.kmeans
-        
         self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:smart_keys})
-
         self.initialized = True
         return data
 
-
     def init_keys(self, x, y, data_ratio=0.2):
         num_clusters = self.keys_per_class
-        
-
         x, y = self.sample(x, y, data_ratio)
         data = [] # for class in classes: (embeddings, labels)
         smart_keys = []
@@ -164,7 +149,6 @@ class Varkeys:
         self.initialized = True
         return data
 
-
     def keys_heatmap(self):
         keys = self.sess.run(self.keys)
         # normalize keys
@@ -180,7 +164,7 @@ class Varkeys:
         plt.colorbar()
         plt.show()
         plt.clf()
-
+        return
 
     def plot_keys(self):
         keys = self.sess.run(self.keys)
@@ -192,6 +176,7 @@ class Varkeys:
             plt.plot(keys_class_i[:, 0], keys_class_i[:, 1], 'o')
         plt.show()
         plt.clf()
+        return
 
     def regularizer(self):
         # k_ij = Kernel(c_i, c_j) = 1 / d (inverse distance kernel)
