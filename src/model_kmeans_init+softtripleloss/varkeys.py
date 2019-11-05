@@ -160,7 +160,7 @@ class Varkeys:
         distances = distances / distances.max(axis=0)
         
         # plt.imshow(distances, cmap='hot', interpolation='nearest')
-        plt.imshow(distances, cmap='hot_r', interpolation='nearest')
+        plt.imshow(distances, cmap='hot_r', interpolation=None)
         plt.colorbar()
         plt.show()
         plt.clf()

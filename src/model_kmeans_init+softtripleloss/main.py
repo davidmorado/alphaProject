@@ -236,5 +236,5 @@ for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
         modelpath = 'BEST_' + '&'.join([F"{param}={value}" for param, value in hp_dict.items()])
         save_history(history=history, hp_dict=hp_dict, modelpath=modelpath, gridsearch=False)
         
-    M.keys_heatmap()
-    M.plot_keys()
+        M.keys_heatmap()
+        M.plot_keys()
