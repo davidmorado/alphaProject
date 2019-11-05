@@ -237,3 +237,4 @@ for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
         save_history(history=history, hp_dict=hp_dict, modelpath=modelpath, gridsearch=False)
         
     M.keys_heatmap()
+    M.plot_keys()
