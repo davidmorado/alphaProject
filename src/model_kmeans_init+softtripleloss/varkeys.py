@@ -8,49 +8,8 @@ from model import conv_netV2
 from random_mini_batches import random_mini_batches
 from data_loader import get_dataset
 from sklearn.cluster import KMeans
-
-# class Varkeys(Layer):
-
-#     def __init__(self, keysize, n_keys_per_class, num_categories, bandwidth, **kwargs):
-#         self.bandwidth = bandwidth
-#         self.initializer = TruncatedNormal(mean=0.0, stddev=3, seed=None)
-#         self.num_categories = num_categories
-#         self.keysize = keysize # embedding_dim
-#         self.dict_size = num_categories*n_keys_per_class
-#         self.values = tf.constant(np.repeat(np.eye(num_categories, dtype=int), n_keys_per_class, axis = 0), 
-#             dtype=tf.float32, shape = (self.dict_size, num_categories))
-#         super(Varkeys, self).__init__(**kwargs)
-
-#     def build(self, input_shape):
-#         # Create a trainable weight variable for this layer.
-#         self.keys = self.add_weight(name='keys', 
-#                                       shape=(self.dict_size, self.keysize),
-#                                       initializer=self.initializer,
-#                                       trainable=True)
-#         super(Varkeys, self).build(input_shape)
-
-#     def call(self, x):
-#         # switch out with KNN if you want!
-#         KV =  tf.matmul(tf.transpose(self.kernel(self.keys, x)), self.values)
-#         KV_ = tf.diag(tf.reshape(tf.reciprocal(tf.matmul(KV, tf.ones((self.num_categories,1)))), [-1]))
-#         output = tf.matmul(KV_, KV)
-#         return output
-
-    
-# def sq_distance(self, A, B):
-#     row_norms_A = tf.reduce_sum(tf.square(A), axis=1)
-#     row_norms_A = tf.reshape(row_norms_A, [-1, 1])  # Column vector.
-
-#     row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
-#     row_norms_B = tf.reshape(row_norms_B, [1, -1])  # Row vector.
-
-#     return row_norms_A - 2 * tf.matmul(A, tf.transpose(B)) + row_norms_B
-
-
-# def kernel (self, A,B):
-#     d = self.sq_distance(A,B)/self.bandwidth
-#     o = tf.reciprocal(d+1e-4)
-#     return o
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 
 
 
@@ -117,7 +76,8 @@ class Varkeys:
         return (sample_x, sample_y)
 
 
-    def _input_fn(self, x, y):         
+    def _input_fn(self, x, y):  
+     
         embeddings = []
         labels = []
         batch_size=32
@@ -183,8 +143,11 @@ class Varkeys:
 
         x, y = self.sample(x, y, data_ratio)
         data = [] # for class in classes: (embeddings, labels)
-
         smart_keys = []
+
+        if tf.report_uninitialized_variables().shape[0] > 0:
+            raise Exception('Initialize Graph before calling Varkeys.init_keys')
+
         for x_class, y_class in zip(x, y):
 
             _, embeddings, labels =  self._input_fn(x_class, y_class)   
@@ -202,8 +165,58 @@ class Varkeys:
         return data
 
 
+    def keys_heatmap(self):
+        keys = self.sess.run(self.keys)
+        # normalize keys
+        # normalized_keys = keys / np.linalg.norm(keys, axis=1).reshape(-1, 1)
+        distances = self.kernel(keys, keys)
+        distances = self.sess.run(distances)
+
+        # normalize
+        distances = distances / distances.max(axis=0)
+        
+        # plt.imshow(distances, cmap='hot', interpolation='nearest')
+        plt.imshow(distances, cmap='hot_r', interpolation='nearest')
+        plt.colorbar()
+        plt.show()
+        plt.clf()
 
 
+    def plot_keys(self):
+        keys = self.sess.run(self.keys)
+        keys_embedded = TSNE(n_components=2).fit_transform(keys)
+        for i in range(self.num_categories):          
+            start_index = i * self.keys_per_class
+            end_index = (i+1) * self.keys_per_class
+            keys_class_i = keys[start_index : end_index]
+            plt.plot(keys_class_i[:, 0], keys_class_i[:, 1], 'o')
+        plt.show()
+        plt.clf()
+
+
+
+    def regularizer(self):
+        # k_ij = Kernel(c_i, c_j) = 1 / d (inverse distance kernel)
+        # for c_i = c_j, kernel(...) = some large number
+        # we want the keys to be far apart
+        # reg = sum( Kernel(c_i, c_j))
+        return tf.reduce_sum(self.kernel(self.keys, self.keys))
+
+
+# ValueError: Colormap cold is not recognized. Possible values are: 
+# Accent, Accent_r, Blues, Blues_r, BrBG, BrBG_r, BuGn, BuGn_r, BuPu, BuPu_r, CMRmap, CMRmap_r, 
+# Dark2, Dark2_r, GnBu, GnBu_r, Greens, Greens_r, Greys, Greys_r, OrRd, OrRd_r, Oranges, Oranges_r, PRGn, PRGn_r, 
+# Paired, Paired_r, Pastel1, Pastel1_r, Pastel2, Pastel2_r, PiYG, PiYG_r, PuBu, PuBuGn, PuBuGn_r, PuBu_r, PuOr, PuOr_r, PuRd, PuRd_r, 
+# Purples, Purples_r, RdBu, RdBu_r, RdGy, RdGy_r, RdPu, RdPu_r, RdYlBu, RdYlBu_r, RdYlGn, RdYlGn_r, Reds, Reds_r, 
+# Set1, Set1_r, Set2, Set2_r, Set3, Set3_r, Spectral, Spectral_r, Wistia, Wistia_r, 
+# YlGn, YlGnBu, YlGnBu_r, YlGn_r, YlOrBr, YlOrBr_r, YlOrRd, YlOrRd_r, afmhot, afmhot_r, autumn, autumn_r, binary, binary_r, 
+# bone, bone_r, brg, brg_r, bwr, bwr_r, cividis, cividis_r, cool, cool_r, coolwarm, coolwarm_r, copper, copper_r, 
+# cubehelix, cubehelix_r, flag, flag_r, gist_earth, gist_earth_r, gist_gray, gist_gray_r, gist_heat, gist_heat_r, gist_ncar, gist_ncar_r, 
+# gist_rainbow, gist_rainbow_r, gist_stern, gist_stern_r, gist_yarg, gist_yarg_r, 
+# gnuplot, gnuplot2, gnuplot2_r, gnuplot_r, gray, gray_r, hot, hot_r, hsv, hsv_r, inferno, inferno_r, jet, jet_r, magma, magma_r, 
+# nipy_spectral, nipy_spectral_r, ocean, ocean_r, pink, pink_r, plasma, plasma_r, prism, prism_r, rainbow, rainbow_r, 
+# seismic, seismic_r, spring, spring_r, summer, summer_r, tab10, tab10_r, tab20, tab20_r, tab20b, tab20b_r, tab20c, tab20c_r, 
+# terrain, terrain_r, twilight, twilight_r, twilight_shifted, twilight_shifted_r, viridis, viridis_r, winter, winter_r
     
 
 if __name__ == '__main__':
@@ -218,7 +231,7 @@ if __name__ == '__main__':
     x_placeholder = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
     y_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
     encoder = conv_netV2(x_placeholder, embedding_size)
-    m = Varkeys(sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=0.1, kmeans_max_iter=kmeans_max_iter)
+    m = Varkeys(sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=1, kmeans_max_iter=kmeans_max_iter)
     sess.run(tf.global_variables_initializer())
     x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
     data = m.init_keys(x_train, y_train, data_ratio=0.1)
@@ -231,20 +244,20 @@ if __name__ == '__main__':
     print(keys)
     print(V)
     colors = ['orange', 'yellow', 'green', 'blue', 'red', 'black', 'violet', 'brown', 'gray', 'lightblue'] 
-    for i in range(num_classes):
-        x_class, y_class = data[i]
-        start_index = i * keys_per_class
-        end_index = (i+1) * keys_per_class
-        keys_class_i = keys[start_index : end_index]
-        plt.plot(keys_class_i[:, 0], keys_class_i[:, 1], 'ro', marker='x', markersize =10, color=colors[i])
+    # for i in range(num_classes):
+    #     x_class, y_class = data[i]
+    #     start_index = i * keys_per_class
+    #     end_index = (i+1) * keys_per_class
+    #     keys_class_i = keys[start_index : end_index]
+    #     plt.plot(keys_class_i[:, 0], keys_class_i[:, 1], 'ro', marker='x', markersize =10, color=colors[i])
         
-        #xes
-        print(y_class)
-        print(y_class[0][i])
-        assert y_class[0][i] == 1
-        plt.plot(x_class[:, 0], x_class[:, 1], 'ro', marker='o', markersize =5, color=colors[i])
-        plt.show()
-        plt.clf()
+    #     #xes
+    #     print(y_class)
+    #     print(y_class[0][i])
+    #     assert y_class[0][i] == 1
+    #     plt.plot(x_class[:, 0], x_class[:, 1], 'ro', marker='o', markersize =5, color=colors[i])
+    #     plt.show()
+    #     plt.clf()
     
     for i in range(num_classes):
         x_class, y_class = data[i]
@@ -252,7 +265,11 @@ if __name__ == '__main__':
         end_index = (i+1) * keys_per_class
         keys_class_i = keys[start_index : end_index]
         plt.plot(keys_class_i[:, 0], keys_class_i[:, 1], 'ro', marker='x', markersize =10, color=colors[i])
-    plt.show()     
+    plt.show()
+    plt.clf()   
+
+    m.keys_heatmap() 
+    m.plot_keys() 
 
 
 
