@@ -25,7 +25,7 @@ split_ratio = 0.2
 n_output = num_classes= 10
 tr = 1
 keys_per_class = 3
-num_iterations_kmeans = 5
+kmeans_max_iter = 100
 
 
 import os
@@ -142,7 +142,7 @@ def build_graph(sess):
 
     # memory
     M = Varkeys(sess=sess, encoder=embeddings, x_placeholder=x, keysize=embedding_size, keys_per_class=keys_per_class, 
-                num_categories=num_classes, bandwidth=0.1, num_iterations_kmeans=num_iterations_kmeans)
+                num_categories=num_classes, bandwidth=0.1, kmeans_max_iter=kmeans_max_iter)
     output = M(embeddings)
     
 

@@ -55,11 +55,11 @@ from sklearn.cluster import KMeans
 
 
 class Varkeys:
-    def __init__(self, sess, encoder, x_placeholder, keysize, keys_per_class, num_categories, bandwidth, num_iterations_kmeans=5):
+    def __init__(self, sess, encoder, x_placeholder, keysize, keys_per_class, num_categories, bandwidth, kmeans_max_iter=5):
         self.encoder = encoder
         self.encoder_placeholder = x_placeholder
         self.sess = sess
-        self.num_iterations = num_iterations_kmeans
+        self.kmeans_max_iter = kmeans_max_iter
         self.bandwidth = bandwidth
         self.num_categories = num_categories
         self.keysize = keysize # embedding_dim
@@ -158,7 +158,7 @@ class Varkeys:
             data.append((embeddings, labels))
             # train
             previous_centers = None
-            for _ in range(self.num_iterations):
+            for _ in range(self.kmeans_max_iter):
                 self.kmeans.train(input_fn)
                 cluster_centers = self.kmeans.cluster_centers()
                 previous_centers = cluster_centers
@@ -190,7 +190,7 @@ class Varkeys:
             _, embeddings, labels =  self._input_fn(x_class, y_class)   
             data.append((embeddings, labels))
 
-            kmeans = KMeans(n_clusters=num_clusters, random_state=0, max_iter=100).fit(embeddings)
+            kmeans = KMeans(n_clusters=num_clusters, random_state=0, max_iter=self.kmeans_max_iter).fit(embeddings)
             centers = kmeans.cluster_centers_
             smart_keys.append(centers)
 
@@ -213,12 +213,12 @@ if __name__ == '__main__':
     dataset = 'cifar10'
     split_ratio = 0.2
     embedding_size = 2
-    num_iterations_kmeans = 5
+    kmeans_max_iter = 100
     sess = tf.Session()
     x_placeholder = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
     y_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
     encoder = conv_netV2(x_placeholder, embedding_size)
-    m = Varkeys(sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=0.1, num_iterations_kmeans=num_iterations_kmeans)
+    m = Varkeys(sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=0.1, kmeans_max_iter=kmeans_max_iter)
     sess.run(tf.global_variables_initializer())
     x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
     data = m.init_keys(x_train, y_train, data_ratio=0.1)
