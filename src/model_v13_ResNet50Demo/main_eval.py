@@ -40,7 +40,7 @@ b2 = 0.999
 e = None
 
 # get training data
-x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(F'cifar{cifar}', normalize=True, ratio=0.2)
+x_train, x_val, x_test, y_train, y_val, y_test = get_dataset('cifar{}'.format(cifar), normalize=True, ratio=0.2)
 # subsample training data
 x_train, y_train = percentage_splitter(x_train, x_val, y_train, y_val, merging=True, random_selection=False, ratio=tp) 
 num_categories = y_train.shape[1]
