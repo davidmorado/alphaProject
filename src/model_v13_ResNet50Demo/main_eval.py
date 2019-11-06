@@ -14,7 +14,6 @@ from keras.models import Model
 from RN50 import ResNet50
 
 from utils import getBatchIndices
-from varkeys import Varkeys
 from data_loader import get_dataset, percentage_splitter
 
 # Hyperparameters:
