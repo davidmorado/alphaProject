@@ -24,7 +24,7 @@ dataset = 'cifar10'
 split_ratio = 0.2
 n_output = num_classes= 10
 tr = 1
-keys_per_class = 3
+keys_per_class = 2
 kmeans_max_iter = 100
 reg = 0.1
 
@@ -58,12 +58,12 @@ x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=spli
 
 
 
-# x_train = x_train[:500].astype(np.float32)
-# y_train = y_train[:500].astype(np.float32)
-# x_val = x_val[:100].astype(np.float32)
-# y_val = y_val[:100].astype(np.float32)
-# x_test = x_test[:100].astype(np.float32)
-# y_test = y_test[:100].astype(np.float32)
+x_train = x_train[:5000].astype(np.float32)
+y_train = y_train[:5000].astype(np.float32)
+x_val = x_val[:5000].astype(np.float32)
+y_val = y_val[:5000].astype(np.float32)
+x_test = x_test[:5000].astype(np.float32)
+y_test = y_test[:5000].astype(np.float32)
 
 
 
@@ -158,7 +158,7 @@ def build_graph(sess):
     # Accuracy
     correct_pred = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
-
+    
     return x, y, embeddings, M,  output, cost, original_optimizer, train_op, correct_pred, accuracy
 
 def del_graph():
@@ -176,11 +176,12 @@ y_train = np.concatenate([y_train, y_val], axis=0)
 x_val = x_test
 y_val = y_test
 
+epochs = 20
 
 
 
-
-for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
+# for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
+for tr in [1]:
     hp_dict = {'keys_per_class' : 3, 'tr' : tr} 
     history = create_empty_history()
 
@@ -191,10 +192,12 @@ for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
         x, y, embeddings, M, output, cost, original_optimizer, train_op, correct_pred, accuracy = build_graph(sess)
         x_train_sample, y_train_sample = sample(x_train, y_train, tr, num_classes)
         print(x_train_sample.shape)
-        # Initializing the variables
+        # Initializing the variables and fix the graph
         sess.run(tf.global_variables_initializer())
+        #sess.graph.finalize()
+
         data_ratio = 0.5 if tr < 0.5 else 0.1
-        data = M.init_keys(x_train_sample, y_train_sample, data_ratio=data_ratio)
+        data = M.init_keys_kmeans(x_train_sample, y_train_sample, data_ratio=data_ratio)
 
 
     
@@ -206,16 +209,18 @@ for tr in [0.1, 0.2, 0.3, 0.5, 0.75, 1]:
             tmp_loss, tmp_acc = [], []
             for i, minibatch in enumerate(minibatches):
                 batch_X, batch_Y = minibatch
-
+                
                 # training step and append to memroy
                 hs = training_step(sess, train_op, batch_X, batch_Y)
+                # if i % 100 == 0:
+                #     M.update_keys(batch_X, batch_Y) 
                 
                 # gather loss and accuracy on batch:
                 train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
                 tmp_acc.append(train_acc)
                 tmp_loss.append(train_loss)
 
-
+            
 
             # compute training accuracy and loss
             train_acc = np.mean(tmp_acc)

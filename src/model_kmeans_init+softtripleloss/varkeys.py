@@ -124,14 +124,14 @@ class Varkeys:
         self.initialized = True
         return data
 
-    def init_keys(self, x, y, data_ratio=0.2):
+    def init_keys_kmeans(self, x, y, data_ratio=0.2):
         num_clusters = self.keys_per_class
         x, y = self.sample(x, y, data_ratio)
         data = [] # for class in classes: (embeddings, labels)
         smart_keys = []
 
-        if tf.report_uninitialized_variables().shape[0] > 0:
-            raise Exception('Initialize Graph before calling Varkeys.init_keys')
+        # if tf.report_uninitialized_variables().shape[0] > 0: # this crashes with sess.graph.finalize()
+        #     raise Exception('Initialize Graph before calling Varkeys.init_keys')
 
         for x_class, y_class in zip(x, y):
 
@@ -145,9 +145,19 @@ class Varkeys:
         smart_keys = np.concatenate(smart_keys, axis=0)
        
         self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:smart_keys})
-
+        del kmeans
         self.initialized = True
         return data
+
+
+    def init_keys_random(self):
+        random_keys = tf.truncated_normal([self.keys_per_class*self.num_categories, self.keysize],mean=0, stddev=0.1), "keys"
+        self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:random_keys})
+
+
+
+    
+
 
     def keys_heatmap(self):
         keys = self.sess.run(self.keys)
@@ -155,6 +165,7 @@ class Varkeys:
         # normalized_keys = keys / np.linalg.norm(keys, axis=1).reshape(-1, 1)
         distances = self.kernel(keys, keys)
         distances = self.sess.run(distances)
+        assert (distances > 0).all()
 
         # normalize
         distances = distances / distances.max(axis=0)
@@ -184,6 +195,63 @@ class Varkeys:
         # we want the keys to be far apart
         # reg = sum( Kernel(c_i, c_j))
         return tf.reduce_sum(self.kernel(self.keys, self.keys))
+
+
+    def update_keys(self, x, y):
+        lr = 0.01
+        keys = self.sess.run(self.keys)
+        values = self.sess.run(self.values)
+        h = self.sess.run(self.encoder, feed_dict={self.encoder_placeholder : x}) # shape: n x keysize
+
+        def euclidean_distance(vector1, vector2):
+            return np.sqrt(np.sum(np.power(vector1-vector2, 2)))
+
+        def get_closest_keys(h, label):
+            # h (=query) shape is (keysize, )
+
+            keys_same = np.where((values==label).all(axis=1))[0] # indices of keys of same class than query h
+            keys_other = np.where((values!=label).any(axis=1))[0]
+            
+            distances_same = []
+            distances_other = []
+            neighbors = []
+            for i in range(0, keys.shape[0]):
+                dist = euclidean_distance(h, keys[i, :])
+                if i in keys_same:
+                    distances_same.append((i, dist))
+                else:
+                    distances_other.append((i, dist))
+            distances_same.sort(key=lambda x: x[1])
+            distances_other.sort(key=lambda x: x[1])
+            indices_same = [i for i, d in distances_same]
+            indices_other = [i for i, d in distances_other]
+            return indices_same[0], indices_other[0]
+        
+        for query, label in zip(h, y):
+            # query shape is (keysize, )
+
+            # find closest key to query for both groups:
+            i, j = get_closest_keys(query, label)
+            
+            pos_key = keys[i]
+            neg_key = keys[j]
+
+            # update these two keys according to
+            # loss = - || h - key_pos ||**2 + || h - key_neg ||**2
+            # this memory loss is (mostly) concave, since on average the second distances should be larger
+            # --> gradient ascent
+            # k_pos = key_pos + lr * 2(h-key_pos) 
+            # k_neg = key_neg - lr * 2(h-key_neg)
+            pos_key = pos_key + lr * 2*(query-pos_key) /  np.sum( (pos_key - query)**2)
+            neg_key = neg_key - lr * 2*(query-neg_key) /  np.sum( (neg_key - query)**2)
+
+
+            # assign new value to keys tensor
+            self.keys = tf.scatter_update(self.keys, [i], updates=pos_key.reshape(1, -1)) # pos_key
+            self.keys = tf.scatter_update(self.keys, [j], updates=neg_key.reshape(1, -1)) # neg_key
+
+
+
 
 
 # ValueError: Colormap cold is not recognized. Possible values are: 
