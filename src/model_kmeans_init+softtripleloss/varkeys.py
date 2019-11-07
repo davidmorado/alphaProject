@@ -163,8 +163,8 @@ class Varkeys:
         keys = self.sess.run(self.keys)
         # normalize keys
         # normalized_keys = keys / np.linalg.norm(keys, axis=1).reshape(-1, 1)
-        distances = self.kernel(keys, keys)
-        distances = self.sess.run(distances)
+        distances_ = self.kernel(keys, keys)
+        distances = self.sess.run(distances_)
         assert (distances > 0).all()
 
         # normalize
