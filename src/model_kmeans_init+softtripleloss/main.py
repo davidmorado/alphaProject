@@ -31,7 +31,7 @@ reg = 0.1
 
 import os
 # creates folders
-folders = ['models', 'gridresults', 'evaluation', 'plots', 'tb_logs', 'errs', 'logs']
+folders = ['models', 'gridresults', 'evaluation', 'evaluation/cifar10', 'evaluation/cifar100', 'plots', 'tb_logs', 'errs', 'logs']
 for f in folders:
     try:
         os.makedirs(f)
