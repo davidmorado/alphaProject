@@ -10,11 +10,66 @@ from data_loader import get_dataset
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
+from scipy.spatial import distance_matrix as dist
+from seaborn import heatmap 
+import sys
+from scipy.stats import truncnorm
+
+class KNN:
+
+    def __init__(self, k, bs):
+        self.k = k # hyperparameter k for KNN
+        self.bs = bs # placeholder for batchsize
+
+    def build(self, x, keys, values):
+        # x:  (batch_size x embedding_size)
+        # keys (n_keys x embedding_size)
+        # values (n_keys x n_classes)
+        dict_size = tf.shape(keys)[0]
+        keysize = tf.shape(keys)[1]
+        print('expected x: ', x)
+        
+        num_classes = tf.shape(values)[1]
+        with tf.variable_scope('KNN'):
+            expanded_x = tf.expand_dims(x, axis=1) # shape: (batch_size, 1, embedding size)
+            expanded_keys = tf.expand_dims(keys, axis=0) # shape: (1, dict_size, embedding_size)
+            tiled_expanded_x = tf.tile(expanded_x, [1, tf.shape(keys)[0], 1]) # shape: (batch_size, dict_size, embedding size)
+
+            # compute distances
+            diff = tf.square(expanded_keys - tiled_expanded_x)
+            distances = tf.reduce_sum(diff,axis=2)  # shape: (batch_size, dict_size)
+
+            # get nearest neighbors
+            _, indices = tf.nn.top_k(-distances, k=self.k)  # shape: [batchsize x k]
+            # hit_values = tf.nn.embedding_lookup(values, tf.range(dict_size)) # shape: (batch-size, k, n_classes) 
+            # hit_keys = tf.nn.embedding_lookup(keys, tf.range(dict_size)) # (batch-size, k, keysize) 
+
+            keys_expanded = tf.tile(tf.expand_dims(keys, axis=0), [self.bs, 1, 1])     # (batch-size, n_keys, keysize) 
+            values_expanded = tf.tile(tf.expand_dims(values, axis=0), [self.bs, 1, 1]) # (batch-size, n_keys, n_classes) 
+            print('indices: ', indices, keys_expanded, values_expanded)
+
+            indices2 = indices[:,:,None]
+            a = tf.range(self.bs)
+            a = tf.reshape(a, [self.bs, 1, 1])
+            a = tf.tile(a, [1, self.k, 1])
+            indices3 = tf.concat([a, indices2], axis=2)
+            updates = tf.ones([self.bs,self.k])
+            hit_mask = tf.zeros([self.bs, dict_size], dtype=tf.float32) 
+            hit_mask_ = tf.tensor_scatter_nd_update(hit_mask, indices3, updates=updates)
+
+            values_expanded = tf.multiply(tf.tile(tf.expand_dims(hit_mask_, axis=2), [1, 1, num_classes]) , values_expanded) # elementwise multiplication
+            return keys_expanded, values_expanded
+
+
+
+
+
 
 
 
 class Varkeys:
-    def __init__(self, sess, encoder, x_placeholder, keysize, keys_per_class, num_categories, bandwidth, kmeans_max_iter=100):
+    def __init__(self, sess, encoder, x_placeholder, keysize, keys_per_class, num_categories, kmeans_max_iter=100,
+                    method='standard', knn_k=5, bandwidth=0.1):
         self.encoder = encoder
         self.encoder_placeholder = x_placeholder
         self.sess = sess
@@ -32,8 +87,40 @@ class Varkeys:
         self.keys = tf.get_variable(name="key", initializer=tf.zeros_like(self.keys_init_placeholder))
         self.keys_init = tf.assign(self.keys, self.keys_init_placeholder)
 
+        # intern hyperparameters:
+        if method not in ['standard', 'knn']:
+            raise Exception(F'Method {method} is not implemented')
+        self.call_method = method
+        self.k= 5
+        self.bs_placeholder = tf.placeholder(tf.int32, shape=[])
+        self.knn = KNN(self.k, self.bs_placeholder)
+        
+
     def __call__(self, x):
+        if self.call_method=='standard':
+            return self.call__standard(x)
+        elif self.call_method=='knn':
+            return self.call__knn(x)
+
+    def get_bs_placeholder(self):
+        return self.bs_placeholder
+
+    def call__standard(self, x):
+        print(self.kernel(self.keys, x).shape)
         KV =  tf.matmul(tf.transpose(self.kernel(self.keys, x)), self.values)
+        KV_ = tf.diag(tf.reshape(tf.reciprocal(tf.matmul(KV, tf.ones((self.num_categories,1)))), [-1]))
+        output = tf.matmul(KV_, KV)
+        return output
+
+    def call__knn(self, x):
+        
+        keys, values = self.knn.build(x, self.keys, self.values)
+       
+        # kernel: [batchsize x k], values: (batchsizee, k, n_classes) 
+        # i need: [batchsize x batchsize x k], values: (batchsize, k, n_classes) --> 
+        ker = tf.tile(tf.expand_dims(self.kernel_with_batchsize(keys, x), axis=0), [self.bs_placeholder, 1, 1]) # shape [batchsize x batchsize x k]
+        KV =  tf.matmul(ker, values) # (k, batchsize, num_classes)
+        KV = KV[0,:,:]
         KV_ = tf.diag(tf.reshape(tf.reciprocal(tf.matmul(KV, tf.ones((self.num_categories,1)))), [-1]))
         output = tf.matmul(KV_, KV)
         return output
@@ -52,6 +139,33 @@ class Varkeys:
         d = self.sq_distance(A,B)/self.bandwidth
         o = tf.reciprocal(d+1e-4)
         return o
+
+
+    def sq_distance_with_batchsize(self, A, B):
+        # A = hit_keys: [batchsize x K x embedding_size]
+        # B = h: [batchsize x embedding_size]
+        # computes ||A||^2 - 2*||AB|| + ||B||^2 = A.TA - 2 A.T B + B.T B
+        row_norms_A = tf.reduce_sum(tf.square(A), axis=2)
+        row_norms_B = tf.reduce_sum(tf.square(B), axis=1)
+        row_norms_B = tf.reshape(row_norms_B, [-1, 1])
+        # B: [batchsize x embedding_size x 1]
+        B = tf.expand_dims(B, axis=2)
+        # B: [batchsize x embedding_size x K]
+        B = tf.tile(B, [1, 1, self.k])
+        # https://stackoverflow.com/questions/38235555/tensorflow-matmul-of-input-matrix-with-batch-data
+        # AB = [batchsize x K x embedding_size] @ [batchsize x embedding_size x K] 
+        # -> [batchsize x K x K] (duplicated on axis 2)
+        AB = tf.matmul(A, B) 
+        # AB -> [batchsize x K]
+        AB = AB[:,:,0] # last dim is just duplacates
+        result = row_norms_A - 2 * AB + row_norms_B
+        return result
+
+    def kernel_with_batchsize(self, A,B):
+        #   1/(e + tf.square(hit_keys - h))
+        distances = self.sq_distance_with_batchsize(A,B)
+        weights = tf.reciprocal(distances+tf.constant(1e-4))
+        return weights # weight matrix: [batchsize x K]
 
     def sample(self, x, y, tr, n_classes=10):
 
@@ -151,11 +265,20 @@ class Varkeys:
 
 
     def init_keys_random(self):
-        random_keys = tf.truncated_normal([self.keys_per_class*self.num_categories, self.keysize],mean=0, stddev=0.1), "keys"
+        # random_keys = tf.truncated_normal([self.keys_per_class*self.num_categories, self.keysize],mean=0, stddev=0.1)
+        random_keys = truncnorm.rvs(-0.1, 0.1, size=[self.keys_per_class*self.num_categories, self.keysize])
         self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:random_keys})
 
 
-
+    def init_keys_iterative_selection(self):
+        # start with one key per class
+        # after one epoch, batch_update, 
+        # for each class
+        #   take the instance with the lowest probability
+        #   add this instance as new key
+        self.max_keys_per_class = self.keys_per_class 
+        self.keys_per_class = 1
+        pass
     
 
 
@@ -163,18 +286,20 @@ class Varkeys:
         keys = self.sess.run(self.keys)
         # normalize keys
         # normalized_keys = keys / np.linalg.norm(keys, axis=1).reshape(-1, 1)
-        distances_ = self.kernel(keys, keys)
-        distances = self.sess.run(distances_)
-        assert (distances > 0).all()
-
+        distances = dist(keys, keys)
+        #assert (distances > 0).all()
+        heatmap(distances)
+        plt.show()
+        #distances_ = self.kernel(keys, keys)
+        #distances  = self.sess.run(distances_)
         # normalize
-        distances = distances / distances.max(axis=0)
+        #distances = distances / distances.max(axis=0)
         
         # plt.imshow(distances, cmap='hot', interpolation='nearest')
-        plt.imshow(distances, cmap='hot_r', interpolation=None)
-        plt.colorbar()
-        plt.show()
-        plt.clf()
+        # plt.imshow(distances, cmap='hot_r', interpolation=None)
+        # plt.colorbar()
+        # plt.show()
+        # plt.clf()
         return
 
     def plot_keys(self):
@@ -254,39 +379,44 @@ class Varkeys:
 
 
 
-# ValueError: Colormap cold is not recognized. Possible values are: 
-# Accent, Accent_r, Blues, Blues_r, BrBG, BrBG_r, BuGn, BuGn_r, BuPu, BuPu_r, CMRmap, CMRmap_r, 
-# Dark2, Dark2_r, GnBu, GnBu_r, Greens, Greens_r, Greys, Greys_r, OrRd, OrRd_r, Oranges, Oranges_r, PRGn, PRGn_r, 
-# Paired, Paired_r, Pastel1, Pastel1_r, Pastel2, Pastel2_r, PiYG, PiYG_r, PuBu, PuBuGn, PuBuGn_r, PuBu_r, PuOr, PuOr_r, PuRd, PuRd_r, 
-# Purples, Purples_r, RdBu, RdBu_r, RdGy, RdGy_r, RdPu, RdPu_r, RdYlBu, RdYlBu_r, RdYlGn, RdYlGn_r, Reds, Reds_r, 
-# Set1, Set1_r, Set2, Set2_r, Set3, Set3_r, Spectral, Spectral_r, Wistia, Wistia_r, 
-# YlGn, YlGnBu, YlGnBu_r, YlGn_r, YlOrBr, YlOrBr_r, YlOrRd, YlOrRd_r, afmhot, afmhot_r, autumn, autumn_r, binary, binary_r, 
-# bone, bone_r, brg, brg_r, bwr, bwr_r, cividis, cividis_r, cool, cool_r, coolwarm, coolwarm_r, copper, copper_r, 
-# cubehelix, cubehelix_r, flag, flag_r, gist_earth, gist_earth_r, gist_gray, gist_gray_r, gist_heat, gist_heat_r, gist_ncar, gist_ncar_r, 
-# gist_rainbow, gist_rainbow_r, gist_stern, gist_stern_r, gist_yarg, gist_yarg_r, 
-# gnuplot, gnuplot2, gnuplot2_r, gnuplot_r, gray, gray_r, hot, hot_r, hsv, hsv_r, inferno, inferno_r, jet, jet_r, magma, magma_r, 
-# nipy_spectral, nipy_spectral_r, ocean, ocean_r, pink, pink_r, plasma, plasma_r, prism, prism_r, rainbow, rainbow_r, 
-# seismic, seismic_r, spring, spring_r, summer, summer_r, tab10, tab10_r, tab20, tab20_r, tab20b, tab20b_r, tab20c, tab20c_r, 
-# terrain, terrain_r, twilight, twilight_r, twilight_shifted, twilight_shifted_r, viridis, viridis_r, winter, winter_r
-    
-
 if __name__ == '__main__':
     import matplotlib.pyplot as plt 
     num_classes = 10
-    keys_per_class = 3
+    keys_per_class = 2
     dataset = 'cifar10'
     split_ratio = 0.2
     embedding_size = 2
     kmeans_max_iter = 100
+    batch_size = 32
     sess = tf.Session()
     x_placeholder = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
     y_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
     encoder = conv_netV2(x_placeholder, embedding_size)
     m = Varkeys(sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=1, kmeans_max_iter=kmeans_max_iter)
+    probas, v, hm, idx  = m(encoder)
     sess.run(tf.global_variables_initializer())
     x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
-    data = m.init_keys(x_train, y_train, data_ratio=0.1)
+    data = m.init_keys_random()
 
+    minibatches = random_mini_batches(x_train, y_train, batch_size, 1)
+    X, Y = minibatches[0]
+    print(X.shape, Y.shape)
+    print('encoder: ', encoder.shape)
+    print('probas: ', probas.shape)
+    print('values: ', v.shape)
+    print('hit_mask: ', hm.shape)
+    #probas_, values_, hit_mask_, indices_ = sess.run([probas, values, hit_mask, indices], feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
+    a = sess.run(encoder, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
+    print(a)
+    sys.stdout.flush()
+    b = sess.run(idx, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
+    print(b)
+    c = sess.run(hm, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
+    print(c)
+    d = sess.run(v, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
+    print(d)
+    
+    sys.exit(0)
     
     print(m.keys)
     print(m.values)
@@ -325,4 +455,59 @@ if __name__ == '__main__':
 
 
 
+
+
+
+# bs = 10
+# nkeys = 8
+# classes = 4
+# keys_per_class = 2
+# k = 5
+
+# import tensorflow as tf 
+# import numpy as np 
+# sess = tf.Session()
+# hit_mask = tf.zeros([10, 8], dtype=tf.float32)
+# idx = np.array([[ 0, 5, 7, 6, 7],
+#                 [ 0, 5, 4, 3, 2],
+#                 [ 0, 7, 6, 7, 4],
+#                 [ 0, 3, 4, 1, 2],
+#                 [ 0, 1, 2, 3, 4],
+#                 [ 0, 5, 5, 3, 3],
+#                 [ 7, 0, 6, 5, 4],
+#                 [ 0, 1, 0, 0, 2],
+#                 [ 3, 0, 2, 2, 5],
+#                 [ 0, 1, 3, 4, 6]])
+# indices = tf.constant(idx)
+# indices2 = indices[:,:,None]
+# a = tf.range(10)
+# a = tf.reshape(a, [10, 1, 1])
+# a = tf.tile(a, [1, 5, 1])
+# indices3 = tf.concat([a, indices2], axis=2)
+# updates = tf.ones([10,5])
+# hit_mask_ = tf.tensor_scatter_nd_update(hit_mask, indices3, updates=updates)
+# sess.run(hit_mask_)
+
+# # shape = shape of output tensor (in this case same shape as input tensor)
+# # indices.shape[-1] = shape.rank --> indices.shape[-1] = 2
+
+
+# # min working example
+# idx = np.array(   [[0, 1],
+#                 [0, 4],
+#                 [4, 3],
+#                 [2, 1],
+#                 [1, 0],
+#                 [0, 4],
+#                 [3, 2],
+#                 [1, 3]])
+# indices = tf.constant(idx)
+# indices2 = indices[:,:,None]
+# a = tf.range(8)
+# a = tf.reshape(a, [8, 1, 1])
+# a = tf.tile(a, [1, 2, 1])
+# indices3 = tf.concat([a, indices2], axis=2)
+# updates = tf.ones([8, 2])
+# tensor = tf.zeros([8, 5])
+# updated = tf.tensor_scatter_update(tensor, indices3, updates)
 

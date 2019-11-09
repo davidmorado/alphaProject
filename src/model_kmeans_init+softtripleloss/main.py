@@ -60,10 +60,10 @@ x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=spli
 
 x_train = x_train[:5000].astype(np.float32)
 y_train = y_train[:5000].astype(np.float32)
-x_val = x_val[:5000].astype(np.float32)
-y_val = y_val[:5000].astype(np.float32)
-x_test = x_test[:5000].astype(np.float32)
-y_test = y_test[:5000].astype(np.float32)
+x_val = x_val[:1000].astype(np.float32)
+y_val = y_val[:1000].astype(np.float32)
+x_test = x_test[:1000].astype(np.float32)
+y_test = y_test[:1000].astype(np.float32)
 
 
 
@@ -98,7 +98,7 @@ def sample(x, y, tr, n_classes):
 
 
 def training_step(session, optimizer, batch_features, batch_labels):
-    _, h = session.run([optimizer, embeddings], feed_dict={x : batch_features, y : batch_labels})
+    _, h = session.run([optimizer, embeddings], feed_dict={x : batch_features, y : batch_labels, M.get_bs_placeholder() : batch_features.shape[0]})
     return h
 
 
@@ -144,7 +144,7 @@ def build_graph(sess):
     # memory
     M = Varkeys(sess=sess, encoder=embeddings, x_placeholder=x, keysize=embedding_size, keys_per_class=keys_per_class, 
                 num_categories=num_classes, bandwidth=0.1, kmeans_max_iter=kmeans_max_iter)
-    output = M(embeddings)
+    output, _, _, _ = M(embeddings)
     
 
     # Loss and Optimizer
@@ -176,7 +176,7 @@ y_train = np.concatenate([y_train, y_val], axis=0)
 x_val = x_test
 y_val = y_test
 
-epochs = 20
+
 
 
 
@@ -207,16 +207,17 @@ for tr in [1]:
             # Loop over all batches
             minibatches = random_mini_batches(x_train_sample, y_train_sample, batch_size, 1)
             tmp_loss, tmp_acc = [], []
-            for i, minibatch in enumerate(minibatches):
+            for i, minibatch in enumerate(minibatches[:-1]):
                 batch_X, batch_Y = minibatch
                 
                 # training step and append to memroy
-                hs = training_step(sess, train_op, batch_X, batch_Y)
+                # hs = training_step(sess, train_op, batch_X, batch_Y)
+                _, hs = sess.run([train_op, embeddings], feed_dict={x : batch_X, y : batch_Y, M.get_bs_placeholder() : batch_X.shape[0]})
                 # if i % 100 == 0:
                 #     M.update_keys(batch_X, batch_Y) 
                 
                 # gather loss and accuracy on batch:
-                train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
+                train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y, M.get_bs_placeholder() : batch_X.shape[0]})
                 tmp_acc.append(train_acc)
                 tmp_loss.append(train_loss)
 
@@ -229,7 +230,7 @@ for tr in [1]:
             history['train']['no_memory']['loss'].append( (epoch, train_loss) )
 
             # compute validation accuracy and loss
-            valid_acc, valid_loss = sess.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
+            valid_acc, valid_loss = sess.run([accuracy, cost], feed_dict={x : x_val, y : y_val, M.get_bs_placeholder() : x_val.shape[0]})
             history['valid']['no_memory']['acc'].append( (epoch, valid_acc) )
             history['valid']['no_memory']['loss'].append( (epoch, valid_loss) )
 
