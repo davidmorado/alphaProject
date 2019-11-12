@@ -58,7 +58,7 @@ class KNN:
             hit_mask_ = tf.tensor_scatter_nd_update(hit_mask, indices3, updates=updates)
 
             values_expanded = tf.multiply(tf.tile(tf.expand_dims(hit_mask_, axis=2), [1, 1, num_classes]) , values_expanded) # elementwise multiplication
-            return keys_expanded, values_expanded
+            return keys_expanded, values_expanded, hit_mask_
 
 
 
@@ -114,7 +114,7 @@ class Varkeys:
 
     def call__knn(self, x):
         
-        keys, values = self.knn.build(x, self.keys, self.values)
+        keys, values, hit_mask_ = self.knn.build(x, self.keys, self.values)
        
         # kernel: [batchsize x k], values: (batchsizee, k, n_classes) 
         # i need: [batchsize x batchsize x k], values: (batchsize, k, n_classes) --> 
@@ -123,7 +123,7 @@ class Varkeys:
         KV = KV[0,:,:]
         KV_ = tf.diag(tf.reshape(tf.reciprocal(tf.matmul(KV, tf.ones((self.num_categories,1)))), [-1]))
         output = tf.matmul(KV_, KV)
-        return output
+        return output, values, hit_mask_
 
     def sq_distance(self, A, B):
         row_norms_A = tf.reduce_sum(tf.square(A), axis=1)
@@ -266,8 +266,9 @@ class Varkeys:
 
     def init_keys_random(self):
         # random_keys = tf.truncated_normal([self.keys_per_class*self.num_categories, self.keysize],mean=0, stddev=0.1)
-        random_keys = truncnorm.rvs(-0.1, 0.1, size=[self.keys_per_class*self.num_categories, self.keysize])
-        self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:random_keys})
+        # random_keys = truncnorm.rvs(-0.1, 0.1, size=[self.keys_per_class*self.num_categories, self.keysize])
+        # self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:random_keys})
+        self.keys = tf.Variable(tf.truncated_normal([n_keys, embedding_dim],mean=0, stddev=0.1), "keys")
 
 
     def init_keys_iterative_selection(self):
@@ -322,8 +323,8 @@ class Varkeys:
         return tf.reduce_sum(self.kernel(self.keys, self.keys))
 
 
-    def update_keys(self, x, y):
-        lr = 0.01
+    def update_keys(self, x, y, lr=0.01):
+        
         keys = self.sess.run(self.keys)
         values = self.sess.run(self.values)
         h = self.sess.run(self.encoder, feed_dict={self.encoder_placeholder : x}) # shape: n x keysize
@@ -392,25 +393,25 @@ if __name__ == '__main__':
     x_placeholder = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
     y_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
     encoder = conv_netV2(x_placeholder, embedding_size)
-    m = Varkeys(sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=1, kmeans_max_iter=kmeans_max_iter)
-    probas, v, hm, idx  = m(encoder)
+    m = Varkeys(method='knn', sess=sess, encoder=encoder, x_placeholder=x_placeholder, keysize=embedding_size, keys_per_class=keys_per_class, num_categories=num_classes, bandwidth=1, kmeans_max_iter=kmeans_max_iter)
+    probas, v, hm = m(encoder)
     sess.run(tf.global_variables_initializer())
     x_train, x_val, x_test, y_train, y_val, y_test = get_dataset(dataset, ratio=split_ratio, normalize=True)
     data = m.init_keys_random()
-
+    np.set_printoptions(threshold=sys.maxsize)
     minibatches = random_mini_batches(x_train, y_train, batch_size, 1)
     X, Y = minibatches[0]
     print(X.shape, Y.shape)
     print('encoder: ', encoder.shape)
-    print('probas: ', probas.shape)
-    print('values: ', v.shape)
-    print('hit_mask: ', hm.shape)
+    # print('probas: ', probas.shape)
+    # print('values: ', v.shape)
+    # print('hit_mask: ', hm.shape)
     #probas_, values_, hit_mask_, indices_ = sess.run([probas, values, hit_mask, indices], feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
     a = sess.run(encoder, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
     print(a)
-    sys.stdout.flush()
-    b = sess.run(idx, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
-    print(b)
+    # sys.stdout.flush()
+    # b = sess.run(idx, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
+    # print(b)
     c = sess.run(hm, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})
     print(c)
     d = sess.run(v, feed_dict={x_placeholder : X, y_placeholder : Y, m.get_bs_placeholder() : X.shape[0]})

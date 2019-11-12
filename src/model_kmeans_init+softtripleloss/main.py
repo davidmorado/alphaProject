@@ -144,7 +144,7 @@ def build_graph(sess):
     # memory
     M = Varkeys(sess=sess, encoder=embeddings, x_placeholder=x, keysize=embedding_size, keys_per_class=keys_per_class, 
                 num_categories=num_classes, bandwidth=0.1, kmeans_max_iter=kmeans_max_iter)
-    output, _, _, _ = M(embeddings)
+    output = M(embeddings)
     
 
     # Loss and Optimizer

@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from model import conv_net, conv_netV2, secondStage, SecondStage
+from model import conv_netV2, secondStage, SecondStage
 from memory import Memory
 
 from keras.datasets import cifar10
@@ -18,7 +18,7 @@ epochs = 100
 batch_size = 32
 learning_rate = 0.001
 embedding_size = 100
-nearest_neighbors = 3
+nearest_neighbors = 50
 validation_freq = 10
 dataset = 'cifar10'
 split_ratio = 0.1
@@ -93,17 +93,20 @@ tf.reset_default_graph()
 # Inputs
 x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
 y = tf.placeholder(tf.float32, shape=(None, num_classes), name='output_y')
-
+bs_placeholder = tf.placeholder(tf.int32, shape=[])
+training_flag = tf.placeholder_with_default(False, shape=())
 
 # start tf session
 sess = tf.Session()
 
+# tensorboard --logdir ./tb_logs/graphs --port 6006
+
 # build network with memory
-M = Memory(embedding_size=embedding_size, size=memory_size, session=sess, target_size=num_classes, K=nearest_neighbors)
-            
+embeddings = conv_netV2(x, training_flag, embedding_size=embedding_size)
+M = Memory(encoder = embeddings, encoder_input_placeholder=x, embedding_size=embedding_size, size=memory_size, session=sess, target_size=num_classes, K=nearest_neighbors)         
 M.initialize()
-embeddings = conv_netV2(x, embedding_size=embedding_size)
-logits = M.model(embeddings)
+
+logits = M.model()
 
 # Loss and Optimizer
 cost = tf.reduce_mean(tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=y))
@@ -129,17 +132,16 @@ def predict(x_, tfsession):
 
     hs_ = tfsession.run(embeddings, feed_dict={x:x_})
     yhats = M.predict(hs_)
-    r =  tfsession.run(yhats, feed_dict={x:x_})
-    return np.squeeze(np.array(r), axis=1)
+    return yhats
 
 def training_step(session, optimizer, batch_features, batch_labels):
-    _, h = session.run([optimizer, embeddings], feed_dict={x : batch_features, y : batch_labels})
+    _, h = session.run([optimizer, embeddings], feed_dict={x : batch_features, y : batch_labels, M.model.cond : 1, M.model.get_h() : np.zeros([32, 100]), training_flag : True})
     return h
 
 
 # Initializing the variables
 sess.run(tf.global_variables_initializer())
-
+writer = tf.summary.FileWriter('./tb_logs/graphs', sess.graph)
 
 # Training cycle
 for epoch in range(epochs):
@@ -162,7 +164,7 @@ for epoch in range(epochs):
             y_ = np.concatenate([y_, batch_Y], axis=0)
         
         # gather loss and accuracy on batch:
-        train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y})
+        train_acc, train_loss = sess.run([accuracy, cost], feed_dict={x : batch_X, y : batch_Y , M.model.cond : 1, M.model.get_h() : np.zeros([32, 100])})
         tmp_acc.append(train_acc)
         tmp_loss.append(train_loss)
 
@@ -176,7 +178,7 @@ for epoch in range(epochs):
     history['train']['no_memory']['loss'].append( (epoch, train_loss) )
 
     # compute validation accuracy and loss
-    valid_acc, valid_loss = sess.run([accuracy, cost], feed_dict={x : x_val, y : y_val})
+    valid_acc, valid_loss = sess.run([accuracy, cost], feed_dict={x : x_val, y : y_val , M.model.cond : 1, M.model.get_h() : np.zeros([32, 100])})
     history['valid']['no_memory']['acc'].append( (epoch, valid_acc) )
     history['valid']['no_memory']['loss'].append( (epoch, valid_loss) )
 
@@ -210,9 +212,7 @@ yhats = predict(x_val, sess)
 print(M.Keys)
 print('after predicting: ', sess.run(M.Keys))
 
-correct_pred = tf.equal(tf.argmax(np.squeeze(np.array(yhats), axis=1), 1), tf.argmax(y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy_memory')
-print(sess.run(accuracy, feed_dict={y: y_val}))
+print(sess.run(accuracy_mem, feed_dict={y: y_val, yhat_placeholder : yhats}))
 
 
 modelpath = 'mbpa'
