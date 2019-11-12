@@ -248,7 +248,7 @@ class Memory():
 
 
 
-    def predict(self, hs):
+    def predict(self, hs, niters):
         # hs is a numpy array
         
         hit_keys, hit_values, weights = self.read(hs)
@@ -261,7 +261,7 @@ class Memory():
             # print(keys.shape) # (1, 50, 100)
             # print(values.shape) # (1, 50, 10)
             # print(weights.shape) # (1, 50)
-            prediction = self.adapt_predict(h, keys[0], values[0], weights[0])
+            prediction = self.adapt_predict(h, keys[0], values[0], weights[0], niters=niters)
             yhats.append(prediction)
         return np.concatenate(yhats, axis=0)
 

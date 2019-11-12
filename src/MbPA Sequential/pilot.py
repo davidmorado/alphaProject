@@ -23,7 +23,8 @@ validation_freq = 10
 dataset = 'cifar10'
 split_ratio = 0.1
 n_output = num_classes= 10
-memory_size = 1000
+memory_size = 8000
+niters = 10
 
 
 import os
@@ -131,7 +132,7 @@ def predict(x_, tfsession):
     # x_: [batchsize x 32 x 32 x 3]
 
     hs_ = tfsession.run(embeddings, feed_dict={x:x_})
-    yhats = M.predict(hs_)
+    yhats = M.predict(hs_, niters=niters)
     return yhats
 
 def training_step(session, optimizer, batch_features, batch_labels):
