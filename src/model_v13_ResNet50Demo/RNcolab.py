@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 import sys
 
-from data_loader import get_dataset, percentage_splitter
+#from data_loader import get_dataset, percentage_splitter
 
 cifar = 10
 tp = 0.1
