@@ -268,7 +268,7 @@ class Varkeys:
         # random_keys = tf.truncated_normal([self.keys_per_class*self.num_categories, self.keysize],mean=0, stddev=0.1)
         # random_keys = truncnorm.rvs(-0.1, 0.1, size=[self.keys_per_class*self.num_categories, self.keysize])
         # self.sess.run(self.keys_init, feed_dict={self.keys_init_placeholder:random_keys})
-        self.keys = tf.Variable(tf.truncated_normal([self.dict_size, embedding_dim],mean=0, stddev=0.1), "keys")
+        self.keys = tf.Variable(tf.truncated_normal([self.dict_size, self.keysize],mean=0, stddev=0.1), "keys")
 
 
     def init_keys_iterative_selection(self):

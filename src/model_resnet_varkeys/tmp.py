@@ -25,7 +25,7 @@ from model import conv_netV2
 from varkeys import Varkeys
 from random_mini_batches import random_mini_batches
 from data_loader import get_dataset
-from tensorflow.keras.layers import Input, Flatten, BatchNormalization, Dense, Dropout
+from tensorflow.keras.layers import Input, Flatten, BatchNormalization, Dense, Dropout, UpSampling2D
 
 
 
@@ -154,9 +154,11 @@ def build_graph(sess):
     training_flag = tf.placeholder_with_default(False, shape=())
 
     # network 
-    embeddings = conv_netV2(x, embedding_size=embedding_size)
+    upsampled_image = UpSampling2D((2,2))(x)
+    upsampled_image = UpSampling2D((2,2))(upsampled_image)
+    upsampled_image = UpSampling2D((2,2))(upsampled_image)
     conv_base = ResNet50(weights='imagenet', include_top=False, input_shape=(32, 32, 3))
-    embeddings = conv_base(x)
+    embeddings = conv_base(upsampled_image)
     embeddings = Flatten()(embeddings)
     embeddings = BatchNormalization()(embeddings)
     embeddings = Dense(128, activation='relu')(embeddings)
