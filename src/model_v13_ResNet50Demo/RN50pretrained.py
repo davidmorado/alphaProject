@@ -190,6 +190,18 @@ def ResNet50(include_top=True,
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape.
     """
+    #global backend, layers, models, keras_utils
+    #backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
+
+    if not (weights in {'imagenet', None} or os.path.exists(weights)):
+        raise ValueError('The `weights` argument should be either '
+                         '`None` (random initialization), `imagenet` '
+                         '(pre-training on ImageNet), '
+                         'or the path to the weights file to be loaded.')
+
+    if weights == 'imagenet' and include_top and classes != 1000:
+        raise ValueError('If using `weights` as `"imagenet"` with `include_top`'
+                         ' as true, `classes` should be 1000')
 
     # Determine proper input shape
     input_shape = _obtain_input_shape(input_shape,
@@ -263,39 +275,24 @@ def ResNet50(include_top=True,
     # Create model.
     model = models.Model(inputs, x, name='resnet50')
 
+    # Load weights.
+    if weights == 'imagenet':
+        if include_top:
+            weights_path = keras_utils.get_file(
+                'resnet50_weights_tf_dim_ordering_tf_kernels.h5',
+                WEIGHTS_PATH,
+                cache_subdir='models',
+                md5_hash='a7b3fe01876f51b976af0dea6bc144eb')
+        else:
+            weights_path = keras_utils.get_file(
+                'resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5',
+                WEIGHTS_PATH_NO_TOP,
+                cache_subdir='models',
+                md5_hash='a268eb855778b3df3c7506639542a6af')
+        model.load_weights(weights_path)
+        if backend.backend() == 'theano':
+            keras_utils.convert_all_kernels_in_model(model)
+    elif weights is not None:
+        model.load_weights(weights)
+
     return model
-
-
-
-def cResNet50(img_input):
-    x = layers.ZeroPadding2D(padding=(3, 3), name='conv1_pad')(img_input)
-    x = layers.Conv2D(64, (7, 7),
-                      strides=(2, 2),
-                      padding='valid',
-                      kernel_initializer='he_normal',
-                      name='conv1')(x)
-    x = layers.BatchNormalization(axis=3, name='bn_conv1')(x) # bn_axis=3
-    x = layers.Activation('relu')(x)
-    x = layers.ZeroPadding2D(padding=(1, 1), name='pool1_pad')(x)
-    x = layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
-
-    x = conv_block(x, 3, [64, 64, 256], stage=2, block='a', strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
-    x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
-
-    x = conv_block(x, 3, [128, 128, 512], stage=3, block='a')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='c')
-    x = identity_block(x, 3, [128, 128, 512], stage=3, block='d')
-
-    x = conv_block(x, 3, [256, 256, 1024], stage=4, block='a')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e')
-    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f')
-
-    x = conv_block(x, 3, [512, 512, 2048], stage=5, block='a')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
-    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
-    return x
