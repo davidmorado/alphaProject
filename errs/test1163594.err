@@ -1,0 +1,85 @@
+/var/lib/slurm-llnl/slurmd/job1163594/slurm_script: line 13: activate: No such file or directory
+Using TensorFlow backend.
+WARNING:tensorflow:From cluster_proto_cnn6.py:216: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:217: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:143: The name tf.truncated_normal is deprecated. Please use tf.random.truncated_normal instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:153: The name tf.nn.max_pool is deprecated. Please use tf.nn.max_pool2d instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:154: calling dropout (from tensorflow.python.ops.nn_ops) with keep_prob is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `rate` instead of `keep_prob`. Rate should be set to `rate = 1 - keep_prob`.
+WARNING:tensorflow:
+The TensorFlow contrib module will not be included in TensorFlow 2.0.
+For more information, please see:
+  * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md
+  * https://github.com/tensorflow/addons
+  * https://github.com/tensorflow/io (for I/O related ops)
+If you depend on functionality not listed there, please file an issue.
+
+WARNING:tensorflow:From /home/dedeoglu/miniconda3/envs/projectGPU/lib/python3.7/site-packages/tensorflow_core/contrib/layers/python/layers/layers.py:1634: flatten (from tensorflow.python.layers.core) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use keras.layers.flatten instead.
+WARNING:tensorflow:From /home/dedeoglu/miniconda3/envs/projectGPU/lib/python3.7/site-packages/tensorflow_core/python/layers/core.py:332: Layer.apply (from tensorflow.python.keras.engine.base_layer) is deprecated and will be removed in a future version.
+Instructions for updating:
+Please use `layer.__call__` method instead.
+WARNING:tensorflow:From cluster_proto_cnn6.py:232: to_float (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use `tf.cast` instead.
+WARNING:tensorflow:From cluster_proto_cnn6.py:234: The name tf.train.AdamOptimizer is deprecated. Please use tf.compat.v1.train.AdamOptimizer instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:236: The name tf.InteractiveSession is deprecated. Please use tf.compat.v1.InteractiveSession instead.
+
+2019-11-28 18:04:45.569940: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX
+2019-11-28 18:04:45.600331: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2499980000 Hz
+2019-11-28 18:04:45.602972: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55c67a115450 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2019-11-28 18:04:45.603006: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2019-11-28 18:04:45.604253: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcuda.so.1
+2019-11-28 18:04:45.642880: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1618] Found device 0 with properties: 
+name: Tesla K80 major: 3 minor: 7 memoryClockRate(GHz): 0.8235
+pciBusID: 0000:86:00.0
+2019-11-28 18:04:45.643285: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.0
+2019-11-28 18:04:45.644716: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10.0
+2019-11-28 18:04:45.645901: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcufft.so.10.0
+2019-11-28 18:04:45.646318: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcurand.so.10.0
+2019-11-28 18:04:45.647971: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusolver.so.10.0
+2019-11-28 18:04:45.649295: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusparse.so.10.0
+2019-11-28 18:04:45.653094: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+2019-11-28 18:04:45.655703: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1746] Adding visible gpu devices: 0
+2019-11-28 18:04:45.655750: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.0
+2019-11-28 18:04:45.719671: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1159] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-11-28 18:04:45.719715: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1165]      0 
+2019-11-28 18:04:45.719724: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1178] 0:   N 
+2019-11-28 18:04:45.723284: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1304] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10805 MB memory) -> physical GPU (device: 0, name: Tesla K80, pci bus id: 0000:86:00.0, compute capability: 3.7)
+2019-11-28 18:04:45.725759: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x55c67b9aa650 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2019-11-28 18:04:45.725800: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Tesla K80, Compute Capability 3.7
+WARNING:tensorflow:From cluster_proto_cnn6.py:237: The name tf.global_variables_initializer is deprecated. Please use tf.compat.v1.global_variables_initializer instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:321: The name tf.get_collection is deprecated. Please use tf.compat.v1.get_collection instead.
+
+WARNING:tensorflow:From cluster_proto_cnn6.py:321: The name tf.GraphKeys is deprecated. Please use tf.compat.v1.GraphKeys instead.
+
+2019-11-28 18:04:47.087558: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1618] Found device 0 with properties: 
+name: Tesla K80 major: 3 minor: 7 memoryClockRate(GHz): 0.8235
+pciBusID: 0000:86:00.0
+2019-11-28 18:04:47.087642: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudart.so.10.0
+2019-11-28 18:04:47.087679: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10.0
+2019-11-28 18:04:47.087705: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcufft.so.10.0
+2019-11-28 18:04:47.087726: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcurand.so.10.0
+2019-11-28 18:04:47.087745: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusolver.so.10.0
+2019-11-28 18:04:47.087764: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcusparse.so.10.0
+2019-11-28 18:04:47.087786: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+2019-11-28 18:04:47.090006: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1746] Adding visible gpu devices: 0
+2019-11-28 18:04:47.090053: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1159] Device interconnect StreamExecutor with strength 1 edge matrix:
+2019-11-28 18:04:47.090062: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1165]      0 
+2019-11-28 18:04:47.090068: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1178] 0:   N 
+2019-11-28 18:04:47.092365: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1304] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 10805 MB memory) -> physical GPU (device: 0, name: Tesla K80, pci bus id: 0000:86:00.0, compute capability: 3.7)
+2019-11-28 18:04:47.381076: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcublas.so.10.0
+2019-11-28 18:04:47.569133: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libcudnn.so.7
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd-gpu-000: error: *** JOB 1163594 ON gpu-000 CANCELLED AT 2019-11-28T19:04:57 DUE TO TIME LIMIT ***
+slurmstepd-gpu-000: error: *** STEP 1163594.0 ON gpu-000 CANCELLED AT 2019-11-28T19:04:57 DUE TO TIME LIMIT ***
+srun: got SIGCONT
+srun: forcing job termination

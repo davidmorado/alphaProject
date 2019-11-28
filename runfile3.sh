@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=proto_res6
+#SBATCH --job-name=proto_cnn
 #SBATCH --output=logs/test%j.log
 #SBATCH --error=errs/test%j.err
 #SBATCH --mail-type=ALL
@@ -14,5 +14,5 @@ source activate projectGPU
 
 
 ## Run the script
-srun python cluster_proto_resnet21.py
+srun python cluster_proto_cnn3.py
 
