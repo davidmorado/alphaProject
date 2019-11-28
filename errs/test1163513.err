@@ -1,0 +1,7 @@
+/var/lib/slurm-llnl/slurmd/job1163513/slurm_script: line 13: activate: No such file or directory
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "cluster_proto_resnet.py", line 18, in <module>
+    from tf.keras.datasets import cifar10
+ModuleNotFoundError: No module named 'tf'
+srun: error: gpu-000: task 0: Exited with exit code 1

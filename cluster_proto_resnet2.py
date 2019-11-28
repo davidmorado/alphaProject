@@ -118,7 +118,7 @@ def percentage_splitter(train, val, yt ,yv ,merging ,random_selection ,ratio):
 #Merging: merges train and validation
 #Random_selection: makes train data shuffle before split so it would select different instances 
 #Ratio: selects instances with the given percentage [0-1]
-x_train2, y_train2 = percentage_splitter(x_train, x_val, y_train, y_val, merging=True, random_selection=False, ratio=0.1) 
+x_train2, y_train2 = percentage_splitter(x_train, x_val, y_train, y_val, merging=True, random_selection=False, ratio=0.3) 
 x_train=x_train2; y_train=y_train2
 x_train.shape, x_val.shape, x_test.shape
 #y_train.shape, y_val.shape, y_test.shape
@@ -384,7 +384,7 @@ n_examples_test = test_dataset.shape[1];print(n_examples_test)
 
 """## Training"""
 
-filename = '1. proto_cifar10_10_resnet_graph.pkl'
+filename = '3. proto_cifar10_30_resnet_graph.pkl'
 lr = 0.001
 
 n_epochs = 801

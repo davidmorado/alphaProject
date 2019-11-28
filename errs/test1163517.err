@@ -1,0 +1,23 @@
+/var/lib/slurm-llnl/slurmd/job1163517/slurm_script: line 13: activate: No such file or directory
+Using TensorFlow backend.
+WARNING:tensorflow:From cluster_proto_resnet.py:444: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From cluster_proto_resnet.py:445: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+WARNING:tensorflow:From cluster_proto_resnet.py:454: The name tf.placeholder_with_default is deprecated. Please use tf.compat.v1.placeholder_with_default instead.
+
+WARNING:tensorflow:
+The TensorFlow contrib module will not be included in TensorFlow 2.0.
+For more information, please see:
+  * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md
+  * https://github.com/tensorflow/addons
+  * https://github.com/tensorflow/io (for I/O related ops)
+If you depend on functionality not listed there, please file an issue.
+
+Traceback (most recent call last):
+  File "cluster_proto_resnet.py", line 456, in <module>
+    emb_x = inference(tf.reshape(x, [num_classes * num_support, im_height, im_width, channels]), training_placeholder)
+  File "cluster_proto_resnet.py", line 240, in inference
+    use_bias=False)
+TypeError: __init__() got multiple values for argument 'filters'
+srun: error: gpu-000: task 0: Exited with exit code 1

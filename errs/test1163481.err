@@ -1,0 +1,7 @@
+/var/lib/slurm-llnl/slurmd/job1163481/slurm_script: line 13: activate: No such file or directory
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "cluster_proto_cnn.py", line 210, in <module>
+    from sklearn.model_selection import ParameterGrid
+ModuleNotFoundError: No module named 'sklearn'
+srun: error: gpu-000: task 0: Exited with exit code 1

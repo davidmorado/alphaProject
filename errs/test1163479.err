@@ -1,0 +1,5 @@
+  File "cluster_proto_cnn.py", line 13
+    from __future__ import print_function
+    ^
+SyntaxError: from __future__ imports must occur at the beginning of the file
+srun: error: gpu-000: task 0: Exited with exit code 1

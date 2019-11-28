@@ -1,0 +1,6 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "cluster_proto_cnn.py", line 210, in <module>
+    from sklearn.model_selection import ParameterGrid
+ModuleNotFoundError: No module named 'sklearn'
+srun: error: gpu-000: task 0: Exited with exit code 1
