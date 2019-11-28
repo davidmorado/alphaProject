@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=CNN_VK
+#SBATCH --job-name=RN50VK
 #SBATCH --output=logs/test%j.log
 #SBATCH --error=errs/test%j.err
 #SBATCH --mail-type=ALL
@@ -8,7 +8,7 @@
 # ## FOR GPU USE:
 #SBATCH --partition=TEST
 #SBATCH --gres=gpu:1
-source activate test
+source activate lalala
 
 ## Run the script
-srun python main.py $1 $2 $3 $4 $5 $6
+srun python RNcolab.py
